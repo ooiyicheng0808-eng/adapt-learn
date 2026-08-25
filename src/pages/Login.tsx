@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -17,6 +17,8 @@ export function Login() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useSettings();
@@ -24,6 +26,25 @@ export function Login() {
 
   const isSignUp = location.state?.mode === 'signup';
   const [role, setRole] = useState<'learner' | 'seller'>(location.state?.role || 'learner');
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      toast.error("Please enter your email.");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await api.post('/auth/forgot-password', { email });
+      toast.success("Password reset code sent! Please check your inbox.");
+      setIsForgotPassword(false);
+      navigate('/reset-password');
+    } catch (error: any) {
+      toast.error(error.message || "Failed to send reset email");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,12 +92,40 @@ export function Login() {
       </div>
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">{isSignUp ? 'Register!' : t('welcomeBack')}</CardTitle>
+          <CardTitle className="text-2xl font-bold">
+            {isForgotPassword ? 'Reset Password' : (isSignUp ? 'Register!' : t('welcomeBack'))}
+          </CardTitle>
           <CardDescription>
-            {t('enterDetails')}
+            {isForgotPassword ? 'Enter your email to receive a 4-digit code' : t('enterDetails')}
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleLogin}>
+        {isForgotPassword ? (
+          <form onSubmit={handleForgotPassword}>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">{t('email')}</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="m@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="border-2 border-border"
+                  required
+                />
+              </div>
+            </CardContent>
+            <CardFooter className="pt-8 flex flex-col space-y-2">
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? 'Sending...' : 'Send Code'}
+              </Button>
+              <Button type="button" variant="link" onClick={() => setIsForgotPassword(false)} className="text-sm">
+                Back to login
+              </Button>
+            </CardFooter>
+          </form>
+        ) : (
+          <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
             {isSignUp && (
               <>
@@ -135,16 +184,38 @@ export function Login() {
               </>
             )}
             <div className="space-y-2">
-              <Label htmlFor="password">{t('password')}</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Include letter, number, and space"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="border-2 border-border"
-                required
-              />
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">{t('password')}</Label>
+                {!isSignUp && (
+                  <Button type="button" variant="link" className="p-0 h-auto text-xs" onClick={() => setIsForgotPassword(true)}>
+                    Forgot Password?
+                  </Button>
+                )}
+              </div>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Include letter, number, and space"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="border-2 border-border pr-10"
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-muted-foreground"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
             </div>
           </CardContent>
           <CardFooter className="pt-8">
@@ -152,7 +223,8 @@ export function Login() {
               {isLoading ? 'Loading...' : (isSignUp ? 'Sign Up' : t('signIn'))}
             </Button>
           </CardFooter>
-        </form>
+          </form>
+        )}
       </Card>
     </div>
   );

@@ -9,6 +9,7 @@ import { Toaster } from "./components/ui/sonner";
 
 import { CustomerService } from "./pages/CustomerService";
 import { AiLearning } from "./pages/AiLearning";
+import { ResetPassword } from "./pages/ResetPassword";
 
 // Forcing a re-render to clear HMR issue
 function Root() {
@@ -51,6 +52,10 @@ export const router = createBrowserRouter([
       {
         path: "ai-learning",
         Component: AiLearning,
+      },
+      {
+        path: "reset-password",
+        Component: ResetPassword,
       }
     ]
   }

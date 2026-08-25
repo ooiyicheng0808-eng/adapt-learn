@@ -1,6 +1,8 @@
 import { prisma } from "../utils/prisma";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
+import { sendResetPasswordEmail } from "../utils/email";
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecretjwtkey";
 const JWT_EXPIRES_IN = "7d";
@@ -46,4 +48,69 @@ export class AuthService {
     const { passwordHash: _, ...userWithoutPassword } = user;
     return { user: userWithoutPassword, token };
   }
+
+  static async forgotPassword(email: string) {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Generate a secure 4-digit token
+    const token = Math.floor(1000 + Math.random() * 9000).toString();
+    const expires = new Date(Date.now() + 3600000); // 1 hour
+
+    // Save token and expiration to DB
+    await prisma.user.update({
+      where: { email },
+      data: {
+        resetPasswordToken: token,
+        resetPasswordExpires: expires,
+      },
+    });
+
+    // Send email
+    try {
+      await sendResetPasswordEmail(email, token);
+    } catch (error) {
+      // Revert token if email fails
+      await prisma.user.update({
+        where: { email },
+        data: {
+          resetPasswordToken: null,
+          resetPasswordExpires: null,
+        },
+      });
+      throw error;
+    }
+  }
+
+  static async resetPassword(token: string, newPassword: string) {
+    const user = await prisma.user.findFirst({
+      where: {
+        resetPasswordToken: token,
+        resetPasswordExpires: {
+          gt: new Date(), // Check if token is not expired
+        },
+      },
+    });
+
+    if (!user) {
+      throw new Error("Invalid or expired password reset token");
+    }
+
+    // Hash the new password
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(newPassword, salt);
+
+    // Update user password and clear token fields
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        resetPasswordToken: null,
+        resetPasswordExpires: null,
+      },
+    });
+  }
 }
+
