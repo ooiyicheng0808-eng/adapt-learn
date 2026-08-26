@@ -56,4 +56,17 @@ export class AuthController {
       res.status(500).json({ message: "Failed to reset password", error: error.message });
     }
   }
+
+  static async updateProfile(req: Request, res: Response) {
+    try {
+      const userId = (req as any).user?.id;
+      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+      
+      const { profilePic } = req.body;
+      const result = await AuthService.updateProfile(userId, { profilePic });
+      res.status(200).json(result);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to update profile", error: error.message });
+    }
+  }
 }

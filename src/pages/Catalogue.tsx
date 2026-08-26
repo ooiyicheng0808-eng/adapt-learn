@@ -14,6 +14,8 @@ import { TopSearchBar } from '../components/TopSearchBar';
 
 import { WithdrawModal } from '../components/WithdrawModal';
 import { RechargeModal } from '../components/RechargeModal';
+import { LearnerChatPopup } from '../components/LearnerChatPopup';
+import { SellerInbox } from '../components/SellerInbox';
 
 export function Catalogue() {
   const { t } = useSettings();
@@ -21,7 +23,7 @@ export function Catalogue() {
   const isSeller = userProfile?.role === 'seller';
   const displayProducts = isSeller ? products : products.filter(p => !hasUnlocked(p.id));
   
-  const [activeTab, setActiveTab] = useState<'products' | 'sales' | 'progress' | 'growth' | 'feedback'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'sales' | 'progress' | 'growth' | 'feedback' | 'inbox'>('products');
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [isRechargeModalOpen, setIsRechargeModalOpen] = useState(false);
 
@@ -107,6 +109,12 @@ export function Catalogue() {
           >
             Learner Feedback
           </button>
+          <button 
+            onClick={() => setActiveTab('inbox')}
+            className={`text-base font-bold h-full px-2 transition-colors ${activeTab === 'inbox' ? 'text-foreground border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground hover:border-b-2 hover:border-muted-foreground/30 font-medium'}`}
+          >
+            Inbox
+          </button>
         </div>
       )}
 
@@ -127,7 +135,10 @@ export function Catalogue() {
         {isSeller && activeTab === 'feedback' && (
           <LearnerFeedback />
         )}
-        {isSeller && activeTab !== 'products' && activeTab !== 'sales' && activeTab !== 'progress' && activeTab !== 'growth' && activeTab !== 'feedback' && (
+        {isSeller && activeTab === 'inbox' && (
+          <SellerInbox />
+        )}
+        {isSeller && activeTab !== 'products' && activeTab !== 'sales' && activeTab !== 'progress' && activeTab !== 'growth' && activeTab !== 'feedback' && activeTab !== 'inbox' && (
           <div className="flex flex-1 items-center justify-center min-h-[400px]">
             <p className="text-xl text-muted-foreground font-medium">Coming soon</p>
           </div>
@@ -142,10 +153,13 @@ export function Catalogue() {
       )}
 
       {userProfile?.role !== 'seller' && (
-        <RechargeModal
-          isOpen={isRechargeModalOpen}
-          onClose={() => setIsRechargeModalOpen(false)}
-        />
+        <>
+          <RechargeModal
+            isOpen={isRechargeModalOpen}
+            onClose={() => setIsRechargeModalOpen(false)}
+          />
+          <LearnerChatPopup />
+        </>
       )}
     </div>
   );

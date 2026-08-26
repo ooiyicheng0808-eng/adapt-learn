@@ -112,5 +112,21 @@ export class AuthService {
       },
     });
   }
-}
 
+  static async updateProfile(userId: string, data: { profilePic?: string }) {
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { profilePic: data.profilePic }
+    });
+    return {
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        profilePic: user.profilePic,
+      }
+    };
+  }
+}

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Product } from '../types/product';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
@@ -9,7 +9,8 @@ import { useSettings } from '../contexts/SettingsContext';
 import { useUser } from '../contexts/UserContext';
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from './ui/dialog';
 import { products } from '../data/products';
-import { ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, User, MessageCircle } from 'lucide-react';
+import { api } from '../lib/api';
 
 interface ProductCardProps {
   product: Product;
@@ -22,6 +23,19 @@ export function ProductCard({ product }: ProductCardProps) {
   const [activeProduct, setActiveProduct] = useState<Product>(product);
   
   const isSeller = userProfile?.role === 'seller';
+  
+  const [courseSeller, setCourseSeller] = useState<{username: string, profilePic?: string, id: string} | null>(null);
+
+  useEffect(() => {
+    if (!isSeller) {
+      api.get('/messages/sellers').then(sellers => {
+        if (sellers && sellers.length > 0) {
+          const index = parseInt(product.id) % sellers.length;
+          setCourseSeller(sellers[index]);
+        }
+      }).catch(console.error);
+    }
+  }, [product.id, isSeller]);
 
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
@@ -57,16 +71,26 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <Card className="overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full">
-        <DialogTrigger asChild>
-          <div className="aspect-square overflow-hidden cursor-pointer relative group">
+        {isSeller ? (
+          <div className="aspect-square overflow-hidden relative">
             <ImageWithFallback
               src={product.image}
               alt={product.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
           </div>
-        </DialogTrigger>
+        ) : (
+          <DialogTrigger asChild>
+            <div className="aspect-square overflow-hidden cursor-pointer relative group">
+              <ImageWithFallback
+                src={product.image}
+                alt={product.name}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+            </div>
+          </DialogTrigger>
+        )}
         <CardContent className="p-4 flex flex-col flex-1 space-y-3">
           <div className="flex items-start justify-between flex-1">
             <div className="space-y-1 w-full">
@@ -78,12 +102,11 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
           <div className="pt-2 mt-auto">
             {isSeller ? (
-              <Button 
-                onClick={(e) => handleUnlock(product, e)} 
-                className="w-full font-semibold bg-primary hover:bg-primary/90 text-primary-foreground"
+              <div 
+                className="w-full font-semibold bg-muted text-muted-foreground px-4 py-2 rounded-md text-center text-sm"
               >
                 Sell ♦{product.price}
-              </Button>
+              </div>
             ) : hasUnlocked(product.id) ? (
               <Button 
                 onClick={(e) => handleUnlock(product, e)} 
@@ -161,9 +184,37 @@ export function ProductCard({ product }: ProductCardProps) {
                 <p className="text-white/70 uppercase text-sm font-bold tracking-widest mb-2">
                   {activeProduct.brand}
                 </p>
-                <h2 className="text-3xl md:text-4xl font-extrabold leading-tight tracking-tight text-white">
+                <h2 className="text-3xl md:text-4xl font-extrabold leading-tight tracking-tight text-white mb-6">
                   {activeProduct.name}
                 </h2>
+                
+                {/* Seller Profile Section */}
+                <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl hover:bg-white/10 transition-colors cursor-pointer w-fit border border-white/10 group/seller">
+                  <div className="w-10 h-10 rounded-full bg-[#2563EB]/20 flex items-center justify-center shrink-0 border border-[#2563EB]/30 group-hover/seller:border-[#2563EB]/50 transition-colors overflow-hidden">
+                    {courseSeller?.profilePic ? (
+                      <img src={courseSeller.profilePic} alt={courseSeller.username} className="w-full h-full object-cover" />
+                    ) : (
+                      <User className="w-5 h-5 text-[#2563EB]" />
+                    )}
+                  </div>
+                  <div className="flex flex-col pr-2">
+                    <span className="text-sm font-bold text-white leading-tight">{courseSeller?.username || 'Course Seller'}</span>
+                    <span className="text-[11px] font-medium text-white/50">Instructor</span>
+                  </div>
+                  <Button 
+                    size="sm" 
+                    onClick={() => {
+                      if (courseSeller) {
+                        setOpen(false);
+                        window.dispatchEvent(new CustomEvent('open-chat', { detail: { seller: courseSeller } }));
+                      }
+                    }}
+                    className="rounded-full bg-[#2563EB]/20 hover:bg-[#2563EB] text-[#2563EB] hover:text-white border-none ml-2 gap-1.5 h-8 text-[11px] px-3 transition-colors"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    Message
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

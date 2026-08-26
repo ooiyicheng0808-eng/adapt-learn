@@ -3,15 +3,19 @@ import cors from "cors";
 import authRoutes from "./routes/auth.routes";
 import chatRoutes from "./routes/chat.routes";
 import progressRoutes from "./routes/progress.routes";
+import messageRoutes from "./routes/message.routes";
+import courseRoutes from "./routes/course.routes";
 
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/progress", progressRoutes);
+app.use("/api/messages", messageRoutes);
+app.use("/api/courses", courseRoutes);
 
 app.get("/", (req, res) => {
     res.send("API is running...");

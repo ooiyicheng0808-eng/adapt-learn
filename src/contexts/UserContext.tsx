@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { toast } from 'sonner@2.0.3';
 import { useSettings } from './SettingsContext';
+import { api } from '../lib/api';
 
 export interface UserProfile {
   username: string;
@@ -30,12 +31,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const { language } = useSettings();
 
   useEffect(() => {
-    const savedDiamonds = localStorage.getItem('user_diamonds');
+    const keySuffix = userProfile?.email || 'guest';
+    const savedDiamonds = localStorage.getItem(`user_diamonds_${keySuffix}`);
     if (savedDiamonds) setDiamonds(parseInt(savedDiamonds, 10));
+    else setDiamonds(5000);
 
-    const savedCourses = localStorage.getItem('user_unlocked_courses');
+    const savedCourses = localStorage.getItem(`user_unlocked_courses_${keySuffix}`);
     if (savedCourses) setUnlockedCourses(JSON.parse(savedCourses));
-    
+    else setUnlockedCourses([]);
+  }, [userProfile?.email]);
+
+  useEffect(() => {
     const savedProfile = localStorage.getItem('user_profile');
     if (savedProfile) setUserProfile(JSON.parse(savedProfile));
   }, []);
@@ -48,11 +54,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   };
   
-  const updateProfilePic = (url: string) => {
+  const updateProfilePic = async (url: string) => {
     if (userProfile) {
       const updatedProfile = { ...userProfile, profilePic: url };
       setUserProfile(updatedProfile);
       localStorage.setItem('user_profile', JSON.stringify(updatedProfile));
+      try {
+        await api.put('/auth/update-profile', { profilePic: url });
+      } catch (err) {
+        console.error('Failed to save profile pic to backend', err);
+      }
     }
   };
 
@@ -74,8 +85,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       setDiamonds(newDiamonds);
       setUnlockedCourses(newUnlocked);
       
-      localStorage.setItem('user_diamonds', newDiamonds.toString());
-      localStorage.setItem('user_unlocked_courses', JSON.stringify(newUnlocked));
+      const keySuffix = userProfile?.email || 'guest';
+      localStorage.setItem(`user_diamonds_${keySuffix}`, newDiamonds.toString());
+      localStorage.setItem(`user_unlocked_courses_${keySuffix}`, JSON.stringify(newUnlocked));
       return true;
     } else {
       const msgs = {

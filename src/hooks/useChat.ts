@@ -20,23 +20,10 @@ export function useChat() {
       const token = localStorage.getItem('auth_token');
       if (!token) throw new Error("No auth token");
 
-      // Check if user has an existing session
-      const sessions = await api.get('/chat/session', token);
-      
-      let currentSessionId;
-      if (sessions && sessions.length > 0) {
-        currentSessionId = sessions[0].id; // Use most recent session
-      } else {
-        // Create new session
-        const newSession = await api.postAuthenticated('/chat/session', { title: "Customer Support" }, token);
-        currentSessionId = newSession.id;
-      }
-      
-      setSessionId(currentSessionId);
-
-      // Load messages
-      const history = await api.get(`/chat/session/${currentSessionId}`, token);
-      setMessages(history);
+      // Always create a new session for a fresh chat experience
+      const newSession = await api.post('/chat/session', { title: "Customer Support" });
+      setSessionId(newSession.id);
+      setMessages([]);
 
     } catch (error) {
       console.error("Failed to initialize chat session", error);
@@ -58,10 +45,10 @@ export function useChat() {
     setIsTyping(true);
 
     try {
-      const response = await api.postAuthenticated('/chat/message', {
+      const response = await api.post('/chat/message', {
         sessionId,
         content
-      }, token);
+      });
 
       // Replace temp message with actual, and append AI message
       setMessages(prev => [

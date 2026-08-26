@@ -10,24 +10,25 @@ interface WithdrawModalProps {
 }
 
 const BANKS = [
-  "Maybank",
-  "CIMB Bank",
-  "Public Bank",
-  "RHB Bank",
-  "Hong Leong Bank",
-  "AmBank",
-  "UOB",
-  "Bank Rakyat",
-  "OCBC Bank",
-  "HSBC Bank",
-  "Bank Islam",
-  "Affin Bank"
+  "PayPal",
+  "Bank Transfer",
+  "VISA/Master Card",
+  "FPX",
+  "Google Wallet",
+  "Touch 'n Go eWallet",
+  "Duitnow",
+  "U Mobile",
+  "Shopeepay wallet",
+  "digi",
+  "Grabpay",
+  "celcom",
+  "Boost eWallet",
+  "ATOME"
 ];
 
 export function WithdrawModal({ isOpen, onClose, balance = 1200 }: WithdrawModalProps) {
   const [amount, setAmount] = useState<string>('500.00');
-  const [accountNumber, setAccountNumber] = useState<string>('1627 8263 7182');
-  const [selectedBank, setSelectedBank] = useState<string>('Maybank');
+  const [selectedBank, setSelectedBank] = useState<string>(BANKS[0]);
   const [isBankDropdownOpen, setIsBankDropdownOpen] = useState(false);
   
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -114,24 +115,14 @@ export function WithdrawModal({ isOpen, onClose, balance = 1200 }: WithdrawModal
             </div>
           </div>
 
-          {/* Account Number Input */}
-          <div className="space-y-3">
-            <label className="text-[15px] font-semibold text-foreground">Account number</label>
-            <input
-              type="text"
-              value={accountNumber}
-              onChange={(e) => setAccountNumber(e.target.value)}
-              placeholder="e.g. 1627 8263 7182"
-              className="w-full px-4 py-3.5 bg-transparent border border-input rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors text-foreground font-medium text-[15px]"
-            />
-          </div>
+
         </div>
 
         <div className="mt-8 pt-2">
           <Button 
             onClick={handleWithdraw}
             className="w-full rounded-full py-6 text-base font-bold bg-primary hover:bg-primary/90 text-primary-foreground"
-            disabled={!amount || !accountNumber}
+            disabled={!amount}
           >
             Withdraw
           </Button>

@@ -39,3 +39,40 @@ export const sendResetPasswordEmail = async (email: string, token: string) => {
 
   await transporter.sendMail(mailOptions);
 };
+
+export const sendCourseAlertEmail = async (email: string, learnerName: string, courseName: string, courseUrl: string) => {
+  const host = process.env.SMTP_HOST;
+  const port = parseInt(process.env.SMTP_PORT || "587");
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  const from = process.env.SMTP_FROM || "noreply@example.com";
+
+  if (!host || !user || !pass) {
+    console.error("Missing SMTP credentials in environment variables.");
+    throw new Error("Email service is not properly configured");
+  }
+
+  const transporter = nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    auth: {
+      user,
+      pass,
+    },
+  });
+
+  const mailOptions = {
+    from: `"Education Platform" <${from}>`,
+    to: email,
+    subject: `New Course Published: ${courseName}!`,
+    html: `
+      <h2>New Course Alert!</h2>
+      <p>Hey ${learnerName}, a new course you might like is now available!</p>
+      <h3>${courseName}</h3>
+      <p><a href="${courseUrl}" style="display:inline-block;padding:10px 20px;background-color:#2563EB;color:white;text-decoration:none;border-radius:5px;">Click here to check it out</a></p>
+    `,
+  };
+
+  await transporter.sendMail(mailOptions);
+};

@@ -2,6 +2,11 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from './ui/dialog';
 import { ChevronRight, ChevronDown, FileText, MapPin } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
+import visaImg from '../assets/payment/visa.png';
+import fpxImg from '../assets/payment/fpx.png';
+import googleImg from '../assets/payment/google.png';
+import paypalImg from '../assets/payment/paypal.png';
+import banktransferImg from '../assets/payment/banktransfer.png';
 interface RechargeModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -9,9 +14,50 @@ interface RechargeModalProps {
 
 const PAYMENT_METHODS = [
   {
+    id: 'paypal',
+    name: 'PayPal',
+    img: paypalImg,
+    rate: '1♦ ≈ 0.10 MYR',
+    bonus: '+1',
+    border: true
+  },
+  {
+    id: 'bank_transfer',
+    name: 'Bank Transfer',
+    img: banktransferImg,
+    rate: '1♦ ≈ 0.08 MYR',
+    bonus: '+1',
+    border: true
+  },
+  {
+    id: 'visa_mastercard',
+    name: 'VISA/Master Card',
+    img: visaImg,
+    rate: '1♦ ≈ 0.091 MYR',
+    bonus: '+1',
+    border: false,
+    subtext: 'VISA/MASTERCARD/Diners'
+  },
+  {
+    id: 'fpx',
+    name: 'FPX',
+    img: fpxImg,
+    rate: '1♦ ≈ 0.077 MYR',
+    bonus: '+1',
+    border: true
+  },
+  {
+    id: 'google',
+    name: 'Google Wallet',
+    img: googleImg,
+    rate: '1♦ ≈ 0.12 MYR',
+    bonus: '+1',
+    border: true
+  },
+  {
     id: 'tng',
     name: "Touch 'n Go eWallet",
-    icon: '💳', // Placeholder
+    icon: '💳', 
     rate: '1♦ ≈ 0.078 MYR',
     bonus: '+1',
     border: true
@@ -19,31 +65,15 @@ const PAYMENT_METHODS = [
   {
     id: 'duitnow',
     name: 'Duitnow',
-    icon: '🟣', // Placeholder
+    icon: '🟣', 
     rate: '1♦ ≈ 0.079 MYR',
-    bonus: '+1',
-    border: true
-  },
-  {
-    id: 'google',
-    name: 'Google Wallet',
-    icon: '🇬', // Placeholder
-    rate: '1♦ ≈ 0.12 MYR',
-    bonus: '+1',
-    border: true
-  },
-  {
-    id: 'fpx',
-    name: 'FPX',
-    icon: '🏦', // Placeholder
-    rate: '1♦ ≈ 0.077 MYR',
     bonus: '+1',
     border: true
   },
   {
     id: 'umobile',
     name: 'U Mobile',
-    icon: '🟠', // Placeholder
+    icon: '🟠', 
     rate: '1♦ ≈ 0.11 MYR',
     bonus: null,
     border: true
@@ -51,7 +81,7 @@ const PAYMENT_METHODS = [
   {
     id: 'shopeepay',
     name: 'Shopeepay wallet',
-    icon: '🛍️', // Placeholder
+    icon: '🛍️', 
     rate: '1♦ ≈ 0.077 MYR',
     bonus: '+1',
     border: true
@@ -59,7 +89,7 @@ const PAYMENT_METHODS = [
   {
     id: 'digi',
     name: 'digi',
-    icon: '🟡', // Placeholder
+    icon: '🟡', 
     rate: '1♦ ≈ 0.11 MYR',
     bonus: '+1',
     border: true
@@ -67,7 +97,7 @@ const PAYMENT_METHODS = [
   {
     id: 'grabpay',
     name: 'Grabpay',
-    icon: '🟢', // Placeholder
+    icon: '🟢', 
     rate: '1♦ ≈ 0.077 MYR',
     bonus: '+1',
     border: true
@@ -75,7 +105,7 @@ const PAYMENT_METHODS = [
   {
     id: 'celcom',
     name: 'celcom',
-    icon: '🔵', // Placeholder
+    icon: '🔵', 
     rate: '1♦ ≈ 0.11 MYR',
     bonus: null,
     border: true
@@ -83,7 +113,7 @@ const PAYMENT_METHODS = [
   {
     id: 'boost',
     name: 'Boost eWallet',
-    icon: '🔴', // Placeholder
+    icon: '🔴', 
     rate: '1♦ ≈ 0.077 MYR',
     bonus: '+1',
     border: true
@@ -91,19 +121,10 @@ const PAYMENT_METHODS = [
   {
     id: 'atome',
     name: 'ATOME',
-    icon: '🅰️', // Placeholder
+    icon: '🅰️', 
     rate: '1♦ ≈ 0.085 MYR',
     bonus: '+1',
     border: true
-  },
-  {
-    id: 'visa_mastercard',
-    name: 'VISA/Master Card',
-    icon: '💳', // Placeholder
-    rate: '1♦ ≈ 0.091 MYR',
-    bonus: '+1',
-    border: false,
-    subtext: 'VISA/MASTERCARD/Diners'
   }
 ];
 
@@ -168,8 +189,12 @@ export function RechargeModal({ isOpen, onClose }: RechargeModalProps) {
                   (idx !== visibleMethods.length - 1 || (!isExpanded && PAYMENT_METHODS.length > 3)) ? 'border-b border-border/50' : ''
                 }`}
               >
-                <div className="w-10 h-8 rounded bg-muted flex items-center justify-center mr-4 border text-sm overflow-hidden bg-white">
-                  {method.icon}
+                <div className="w-12 h-8 rounded bg-white flex items-center justify-center mr-4 border text-sm overflow-hidden shrink-0">
+                  {(method as any).img ? (
+                    <img src={(method as any).img} alt={method.name} className="w-full h-full object-contain" />
+                  ) : (
+                    method.icon
+                  )}
                 </div>
                 
                 <div className="flex-1">
