@@ -8,7 +8,7 @@ export interface ChatMessage {
   createdAt?: string;
 }
 
-export function useChat() {
+export function useChat(pageContext: 'CustomerService' | 'AiAssistant' = 'CustomerService') {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -47,7 +47,8 @@ export function useChat() {
     try {
       const response = await api.post('/chat/message', {
         sessionId,
-        content
+        content,
+        pageContext
       });
 
       // Replace temp message with actual, and append AI message

@@ -91,7 +91,20 @@ export function ProfileMenu() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {userProfile?.role !== 'seller' && (
+        {userProfile?.role === 'seller' ? (
+          <>
+            <DropdownMenuGroup>
+              <DropdownMenuItem 
+                className="uppercase cursor-pointer text-xs font-medium"
+                onClick={() => navigate('/seller-copilot')}
+              >
+                <Bot className="mr-2 h-4 w-4" />
+                <span>SELLER COPILOT</span>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+          </>
+        ) : (
           <>
             <DropdownMenuGroup>
               <DropdownMenuItem 
@@ -100,13 +113,6 @@ export function ProfileMenu() {
               >
                 <BookOpen className="mr-2 h-4 w-4" />
                 <span>UNLOCKED COURSES</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                className="uppercase cursor-pointer text-xs font-medium"
-                onClick={() => navigate('/ai-learning')}
-              >
-                <Bot className="mr-2 h-4 w-4" />
-                <span>AI ASSISTANCE LEARNING</span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

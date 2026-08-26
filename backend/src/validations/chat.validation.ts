@@ -9,6 +9,7 @@ export const createSessionSchema = z.object({
 export const sendMessageSchema = z.object({
   body: z.object({
     sessionId: z.string().uuid("Invalid session ID"),
-    content: z.string().min(1, "Message content cannot be empty"),
+    content: z.string().min(1, "Message content is required"),
+    pageContext: z.enum(['CustomerService', 'AiAssistant']).optional(),
   }),
 });

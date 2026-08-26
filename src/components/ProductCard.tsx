@@ -9,8 +9,9 @@ import { useSettings } from '../contexts/SettingsContext';
 import { useUser } from '../contexts/UserContext';
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from './ui/dialog';
 import { products } from '../data/products';
-import { ArrowLeft, CheckCircle2, User, MessageCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, User, MessageCircle, Bot } from 'lucide-react';
 import { api } from '../lib/api';
+import { useNavigate } from 'react-router';
 
 interface ProductCardProps {
   product: Product;
@@ -21,6 +22,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const { unlockCourse, hasUnlocked, userProfile } = useUser();
   const [open, setOpen] = useState(false);
   const [activeProduct, setActiveProduct] = useState<Product>(product);
+  const navigate = useNavigate();
   
   const isSeller = userProfile?.role === 'seller';
   
@@ -59,7 +61,8 @@ export function ProductCard({ product }: ProductCardProps) {
     }
 
     if (hasUnlocked(p.id)) {
-      toast.success(`You have already unlocked ${p.name}!`);
+      setOpen(false);
+      navigate(`/ai-learning?courseId=${p.id}`);
       return;
     }
 
@@ -110,11 +113,10 @@ export function ProductCard({ product }: ProductCardProps) {
             ) : hasUnlocked(product.id) ? (
               <Button 
                 onClick={(e) => handleUnlock(product, e)} 
-                variant="outline"
-                className="w-full font-semibold border-green-500 text-green-600 hover:bg-green-500/10 hover:text-green-600 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400/10"
+                className="w-full font-semibold bg-primary/20 text-primary hover:bg-primary hover:text-white dark:bg-primary/20 dark:text-primary dark:hover:bg-primary dark:hover:text-white border-none gap-2"
               >
-                <CheckCircle2 className="w-4 h-4 mr-2" />
-                Unlocked
+                <Bot className="w-4 h-4" />
+                Take AI Quiz
               </Button>
             ) : (
               <Button 
@@ -163,10 +165,10 @@ export function ProductCard({ product }: ProductCardProps) {
                   ) : hasUnlocked(activeProduct.id) ? (
                     <Button 
                       onClick={() => handleUnlock(activeProduct)} 
-                      className="font-bold shadow-xl h-12 text-[15px] px-8 rounded-full hover:scale-105 transition-transform bg-green-500 hover:bg-green-600 text-white border-none gap-2" 
+                      className="font-bold shadow-xl h-12 text-[15px] px-8 rounded-full hover:scale-105 transition-transform bg-primary hover:bg-primary/90 text-white border-none gap-2" 
                     >
-                      <CheckCircle2 className="w-5 h-5" />
-                      Start Learning
+                      <Bot className="w-5 h-5" />
+                      Take AI Quiz
                     </Button>
                   ) : (
                     <Button 

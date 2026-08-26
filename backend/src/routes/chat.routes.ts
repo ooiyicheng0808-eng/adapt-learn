@@ -12,5 +12,7 @@ router.post("/session", validate(createSessionSchema), ChatController.createSess
 router.get("/session", ChatController.getSessions);
 router.get("/session/:sessionId", ChatController.getSessionMessages);
 router.post("/message", validate(sendMessageSchema), ChatController.sendMessage);
+router.post("/generate-course", ChatController.generateCourse);
+router.post("/evaluate-quiz", ChatController.evaluateQuiz);
 
 export default router;

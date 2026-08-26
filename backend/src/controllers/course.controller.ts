@@ -4,7 +4,7 @@ import { sendCourseAlertEmail } from '../utils/email';
 
 export const createCourse = async (req: Request, res: Response) => {
   try {
-    const { name: courseName } = req.body;
+    const { name: courseName, syllabus, questions, price = 500 } = req.body;
     const sellerId = (req as any).user?.id;
     
     if (!sellerId) return res.status(401).json({ error: 'Unauthorized' });
@@ -16,8 +16,22 @@ export const createCourse = async (req: Request, res: Response) => {
       return res.status(403).json({ error: 'Only sellers can publish courses' });
     }
 
-    // In a real application, you would create the course in the database here
-    // const newCourse = await prisma.course.create({ data: { name: courseName, sellerId } });
+    // Save course and questions to database
+    const newCourse = await prisma.course.create({ 
+      data: { 
+        name: courseName, 
+        sellerId,
+        syllabus: JSON.stringify(syllabus || []),
+        price: Number(price),
+        questions: questions && questions.length > 0 ? {
+          create: questions.map((q: any) => ({
+            questionText: q.questionText,
+            options: JSON.stringify(q.options || []),
+            correctAnswer: q.correctAnswer || 0
+          }))
+        } : undefined
+      } 
+    });
 
     // Fetch all learners
     const learners = await prisma.user.findMany({

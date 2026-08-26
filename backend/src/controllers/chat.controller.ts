@@ -1,6 +1,10 @@
 import { Request, Response } from "express";
 import { ChatService } from "../services/chat.service";
 import { AiService } from "../services/ai.service";
+import { sendQuizResultsEmail } from "../utils/email";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 interface AuthRequest extends Request {
   user?: { id: string; email: string };
@@ -46,7 +50,7 @@ export class ChatController {
   static async sendMessage(req: AuthRequest, res: Response) {
     try {
       const userId = req.user!.id;
-      const { sessionId, content } = req.body;
+      const { sessionId, content, pageContext = 'CustomerService' } = req.body;
 
       // Ensure session belongs to user
       const history = await ChatService.getSessionMessages(sessionId, userId);
@@ -61,8 +65,8 @@ export class ChatController {
       }));
       aiContext.push({ role: "user", content });
 
-      // Call AI
-      const aiResponseContent = await AiService.getChatCompletion(aiContext);
+      // Call AI with multi-agent architecture
+      const aiResponseContent = await AiService.getChatCompletion(aiContext, pageContext, userId);
 
       // Save AI message
       const aiMessage = await ChatService.addMessage(sessionId, "assistant", aiResponseContent);
@@ -70,6 +74,63 @@ export class ChatController {
       res.status(201).json({ userMessage, aiMessage });
     } catch (error: any) {
       res.status(500).json({ message: "Failed to send message", error: error.message });
+    }
+  }
+
+  static async generateCourse(req: AuthRequest, res: Response) {
+    try {
+      const { topicName } = req.body;
+      if (!topicName) {
+        return res.status(400).json({ message: "Topic name is required" });
+      }
+
+      const generatedCourse = await AiService.generateCourse(topicName);
+      res.status(200).json(generatedCourse);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to generate course", error: error.message });
+    }
+  }
+
+  static async evaluateQuiz(req: AuthRequest, res: Response) {
+    try {
+      const userId = req.user!.id;
+      const userEmail = req.user!.email;
+      const { courseId, courseName, score, total, answers } = req.body;
+
+      if (!courseId || !courseName || score === undefined || !total || !answers) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      // Generate AI Evaluation
+      const evaluation = await AiService.evaluateQuiz(score, total, answers, courseName);
+
+      // Save to QuizAttempt
+      const attempt = await prisma.quizAttempt.create({
+        data: {
+          userId,
+          courseId,
+          score,
+          total,
+          weaknesses: evaluation.weaknesses,
+          aiPlan: evaluation.aiPlan,
+        }
+      });
+
+      // Send Email in background
+      const emailContent = `
+        <h1>Quiz Results: ${courseName}</h1>
+        <p>You scored <strong>${score} out of ${total}</strong> (${Math.round((score/total)*100)}%).</p>
+        <h2>Areas for Improvement</h2>
+        <p>${evaluation.weaknesses}</p>
+        <h2>Your Personalized Study Plan</h2>
+        <p>${evaluation.aiPlan}</p>
+      `;
+      sendQuizResultsEmail(userEmail, `Your Quiz Results: ${courseName}`, `Quiz Score: ${score}/${total}`, emailContent).catch(console.error);
+
+      res.status(200).json(evaluation);
+    } catch (error: any) {
+      console.error(error);
+      res.status(500).json({ message: "Failed to evaluate quiz", error: error.message });
     }
   }
 }

@@ -79,6 +79,28 @@ router.get("/learners", async (req: Request, res: Response) => {
     }
 });
 
+// Get detailed quiz attempts for the seller dashboard
+router.get("/quiz-attempts", async (req: Request, res: Response) => {
+    try {
+        const attempts = await prisma.quizAttempt.findMany({
+            include: {
+                user: {
+                    select: { id: true, username: true, email: true, profilePic: true }
+                },
+                course: {
+                    select: { name: true }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        res.json(attempts);
+    } catch (error) {
+        console.error("Failed to fetch quiz attempts:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
 // A temporary endpoint to seed some dummy data for the dashboard
 router.post("/seed", async (req: Request, res: Response) => {
     try {

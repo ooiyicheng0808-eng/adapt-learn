@@ -24,6 +24,9 @@ model User {
   attempts             Attempt[]
   sentMessages         DirectMessage[] @relation("SentMessages")
   receivedMessages     DirectMessage[] @relation("ReceivedMessages")
+  agentMemories        AgentMemory[]
+  courses              Course[]        @relation("SellerCourses")
+  quizAttempts         QuizAttempt[]
 }
 
 model ChatSession {
@@ -98,4 +101,61 @@ model DirectMessage {
 
   @@index([senderId])
   @@index([receiverId])
+}
+
+model AgentMemory {
+  id        String   @id @default(uuid())
+  userId    String
+  agentName String   // "tutor", "planner", etc.
+  summary   String
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Course {
+  id          String     @id @default(uuid())
+  name        String
+  sellerId    String
+  syllabus    String?    // JSON string array of topics
+  price       Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  seller      User       @relation("SellerCourses", fields: [sellerId], references: [id], onDelete: Cascade)
+  questions   Question[]
+  quizAttempts QuizAttempt[]
+
+  @@index([sellerId])
+}
+
+model Question {
+  id            String   @id @default(uuid())
+  courseId      String
+  questionText  String
+  options       String   // JSON string array of options
+  correctAnswer Int      // Index of the correct option
+  createdAt     DateTime @default(now())
+
+  course        Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([courseId])
+}
+
+model QuizAttempt {
+  id         String   @id @default(uuid())
+  userId     String
+  courseId   String
+  score      Int
+  total      Int
+  weaknesses String?
+  aiPlan     String?
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([courseId])
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ProductGrid } from '../components/ProductGrid';
 import { TodaySales } from '../components/TodaySales';
 import { LearnerFeedback } from '../components/LearnerFeedback';
@@ -11,17 +11,43 @@ import { useSettings } from '../contexts/SettingsContext';
 import { useUser } from '../contexts/UserContext';
 import { ProfileMenu } from '../components/ProfileMenu';
 import { TopSearchBar } from '../components/TopSearchBar';
+import { api } from '../lib/api';
 
 import { WithdrawModal } from '../components/WithdrawModal';
 import { RechargeModal } from '../components/RechargeModal';
 import { LearnerChatPopup } from '../components/LearnerChatPopup';
 import { SellerInbox } from '../components/SellerInbox';
+import { SellerFAB } from '../components/SellerFAB';
 
 export function Catalogue() {
   const { t } = useSettings();
   const { diamonds, hasUnlocked, userProfile } = useUser();
   const isSeller = userProfile?.role === 'seller';
-  const displayProducts = isSeller ? products : products.filter(p => !hasUnlocked(p.id));
+  
+  const [dbCourses, setDbCourses] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const data = await api.get('/course/all');
+        const formatted = data.map((c: any) => ({
+          id: c.id,
+          name: c.name.toUpperCase(),
+          brand: c.seller?.username?.toUpperCase() || 'COMMUNITY',
+          price: c.price,
+          // Since they are manually uploading random files/videos, we will use a default image for DB courses
+          image: products[0].image 
+        }));
+        setDbCourses(formatted);
+      } catch (err) {
+        console.error("Failed to load DB courses", err);
+      }
+    };
+    fetchCourses();
+  }, []);
+
+  const allProducts = [...products, ...dbCourses];
+  const displayProducts = isSeller ? allProducts : allProducts.filter(p => !hasUnlocked(p.id));
   
   const [activeTab, setActiveTab] = useState<'products' | 'sales' | 'progress' | 'growth' | 'feedback' | 'inbox'>('products');
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
@@ -146,10 +172,13 @@ export function Catalogue() {
       </div>
 
       {isSeller && (
-        <WithdrawModal 
-          isOpen={isWithdrawModalOpen} 
-          onClose={() => setIsWithdrawModalOpen(false)} 
-        />
+        <>
+          <WithdrawModal 
+            isOpen={isWithdrawModalOpen} 
+            onClose={() => setIsWithdrawModalOpen(false)} 
+          />
+          <SellerFAB />
+        </>
       )}
 
       {userProfile?.role !== 'seller' && (
