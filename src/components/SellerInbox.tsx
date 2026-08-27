@@ -30,52 +30,59 @@ export function SellerInbox() {
   const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // MOCK DATA for hackathon
   useEffect(() => {
-    // Fetch unique conversations
-    api.get('/messages/inbox').then(res => {
-      const msgs = res.data as Message[];
-      // Filter out unique users to chat with
-      const uniqueUsers = new Map<string, Message>();
-      msgs.forEach(msg => {
-        const otherUserId = msg.senderId === userProfile?.id ? msg.receiverId : msg.senderId;
-        if (!uniqueUsers.has(otherUserId)) {
-          uniqueUsers.set(otherUserId, msg);
-        }
-      });
-      setInboxMessages(Array.from(uniqueUsers.values()));
-    }).catch(console.error);
+    const fakeLearners: Message[] = [
+      {
+        id: '1', senderId: 'learner1', receiverId: userProfile?.id || 'seller1', content: 'Hi, I need help with Module 2.', createdAt: new Date().toISOString(),
+        sender: { id: 'learner1', username: 'Alex Johnson', role: 'learner' },
+        receiver: { id: userProfile?.id || 'seller1', username: 'Me', role: 'seller' }
+      },
+      {
+        id: '2', senderId: 'learner2', receiverId: userProfile?.id || 'seller1', content: 'Are there any discounts available?', createdAt: new Date().toISOString(),
+        sender: { id: 'learner2', username: 'Sarah Williams', role: 'learner' },
+        receiver: { id: userProfile?.id || 'seller1', username: 'Me', role: 'seller' }
+      },
+      {
+        id: '3', senderId: 'learner3', receiverId: userProfile?.id || 'seller1', content: 'Thanks for the amazing course!', createdAt: new Date().toISOString(),
+        sender: { id: 'learner3', username: 'Michael Chen', role: 'learner' },
+        receiver: { id: userProfile?.id || 'seller1', username: 'Me', role: 'seller' }
+      }
+    ];
+    setInboxMessages(fakeLearners);
   }, [userProfile?.id]);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
     if (selectedUserId) {
-      const fetchConversation = () => {
-        api.get(`/messages/conversation/${selectedUserId}`)
-          .then(res => setConversation(res.data))
-          .catch(console.error);
-      };
-      fetchConversation();
-      interval = setInterval(fetchConversation, 3000);
+      const relatedMsg = inboxMessages.find(m => m.senderId === selectedUserId || m.receiverId === selectedUserId);
+      if (relatedMsg) {
+        setConversation([relatedMsg]);
+      } else {
+        setConversation([]);
+      }
     }
-    return () => clearInterval(interval);
-  }, [selectedUserId]);
+  }, [selectedUserId, inboxMessages]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversation]);
 
-  const handleSend = async () => {
+  const handleSend = () => {
     if (!inputText.trim() || !selectedUserId) return;
-    try {
-      const res = await api.post('/messages', {
-        receiverId: selectedUserId,
-        content: inputText
-      });
-      setConversation([...conversation, res.data]);
-      setInputText('');
-    } catch (error) {
-      console.error(error);
-    }
+    const newMsg: Message = {
+      id: Date.now().toString(),
+      senderId: userProfile?.id || 'me',
+      receiverId: selectedUserId,
+      content: inputText,
+      createdAt: new Date().toISOString(),
+      sender: { id: userProfile?.id || 'me', username: 'Me', role: 'seller' },
+      receiver: { id: selectedUserId, username: 'Learner', role: 'learner' }
+    };
+    
+    setConversation(prev => [...prev, newMsg]);
+    
+    // Removed auto-reply mock as requested
+    setInputText('');
   };
 
   const getOtherUser = (msg: Message) => {
@@ -121,7 +128,7 @@ export function SellerInbox() {
           <>
             <div className="p-4 border-b font-semibold flex items-center gap-3 bg-muted/10">
               <User className="h-5 w-5 text-primary" />
-              Chatting with Student
+              Chatting with {inboxMessages.find(m => getOtherUser(m).id === selectedUserId) ? getOtherUser(inboxMessages.find(m => getOtherUser(m).id === selectedUserId)!).username : 'Student'}
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background">
               {conversation.map(msg => {

@@ -58,6 +58,14 @@ export class ChatController {
       // Save user message
       const userMessage = await ChatService.addMessage(sessionId, "user", content);
 
+      // Set headers for SSE
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+
+      // Send the saved user message first to the client
+      res.write(`data: ${JSON.stringify({ event: "userMessage", userMessage })}\n\n`);
+
       // Prepare context for AI
       const aiContext = history.map((msg) => ({
         role: msg.role as "user" | "assistant",
@@ -65,15 +73,31 @@ export class ChatController {
       }));
       aiContext.push({ role: "user", content });
 
+      let aiResponseContent = "";
+
       // Call AI with multi-agent architecture
-      const aiResponseContent = await AiService.getChatCompletion(aiContext, pageContext, userId);
+      await AiService.getChatCompletionStream(
+        aiContext,
+        pageContext,
+        userId,
+        (agent, status) => {
+          res.write(`data: ${JSON.stringify({ event: "status", agent, message: status })}\n\n`);
+        },
+        (token) => {
+          aiResponseContent += token;
+          res.write(`data: ${JSON.stringify({ event: "token", token })}\n\n`);
+        }
+      );
 
       // Save AI message
       const aiMessage = await ChatService.addMessage(sessionId, "assistant", aiResponseContent);
 
-      res.status(201).json({ userMessage, aiMessage });
+      res.write(`data: ${JSON.stringify({ event: "done", aiMessage })}\n\n`);
+      res.end();
     } catch (error: any) {
-      res.status(500).json({ message: "Failed to send message", error: error.message });
+      console.error("Error in streaming response:", error);
+      res.write(`data: ${JSON.stringify({ event: "error", message: error.message })}\n\n`);
+      res.end();
     }
   }
 
@@ -103,6 +127,25 @@ export class ChatController {
 
       // Generate AI Evaluation
       const evaluation = await AiService.evaluateQuiz(score, total, answers, courseName);
+
+      // Ensure course exists for foreign key constraint (important for hardcoded products)
+      let course = await prisma.course.findUnique({ where: { id: courseId } });
+      if (!course) {
+        let dummySeller = await prisma.user.findFirst({ where: { role: 'seller' } });
+        if (!dummySeller) {
+          dummySeller = await prisma.user.create({
+            data: { email: 'seller@community.com', username: 'Community Seller', role: 'seller', passwordHash: 'none' }
+          });
+        }
+        course = await prisma.course.create({
+          data: {
+            id: courseId,
+            name: courseName,
+            sellerId: dummySeller.id,
+            price: 0
+          }
+        });
+      }
 
       // Save to QuizAttempt
       const attempt = await prisma.quizAttempt.create({

@@ -29,8 +29,8 @@ export function LearnerProgress() {
   useEffect(() => {
     async function fetchProgress() {
       try {
-        const { data } = await api.get('/progress/quiz-attempts');
-        setAttempts(data);
+        const data = await api.get('/progress/quiz-attempts');
+        setAttempts(data || []);
       } catch (err: any) {
         setError(err.message || 'Failed to load progress data');
       } finally {
@@ -73,7 +73,7 @@ export function LearnerProgress() {
           {attempts.map((p) => {
             const radius = 38;
             const circumference = 2 * Math.PI * radius;
-            const accuracySafe = Math.min(100, Math.max(0, (p.score / p.total) * 100));
+            const accuracySafe = p.total > 0 ? Math.min(100, Math.max(0, (p.score / p.total) * 100)) : 0;
             const strokeDashoffset = circumference - (accuracySafe / 100) * circumference;
 
             return (
@@ -82,12 +82,12 @@ export function LearnerProgress() {
                 <div className="flex flex-col gap-5 flex-1 min-w-0">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10 shrink-0 border">
-                      <AvatarImage src={p.user.profilePic || undefined} alt={p.user.username || 'Learner'} />
-                      <AvatarFallback>{(p.user.username || 'A').charAt(0)}</AvatarFallback>
+                      <AvatarImage src={p.user?.profilePic || undefined} alt={p.user?.username || 'Learner'} />
+                      <AvatarFallback>{(p.user?.username || 'A').charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col min-w-0">
-                      <span className="font-bold text-sm truncate">{p.user.username}</span>
-                      <span className="text-xs text-muted-foreground truncate">{p.user.email}</span>
+                      <span className="font-bold text-sm truncate">{p.user?.username || 'Deleted User'}</span>
+                      <span className="text-xs text-muted-foreground truncate">{p.user?.email || 'No email'}</span>
                     </div>
                   </div>
                   

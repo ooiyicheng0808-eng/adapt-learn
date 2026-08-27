@@ -1,8 +1,15 @@
 import { PrismaClient } from "@prisma/client";
+import { sendQuizResultsEmail } from "../utils/email";
 
 const prisma = new PrismaClient();
 
-const SUPPORT_PROMPT = `You are a helpful Customer Service Platform Assistant for an educational platform. You MUST answer questions related to education, courses, diamonds (currency), refunds, and platform settings. If the user asks about ANYTHING else not related to this platform, you MUST reply EXACTLY with: 'I can't help you with that.'
+const SUPPORT_PROMPT = `You are a helpful Customer Service Platform Assistant for an educational platform. You MUST answer questions related to education, courses, diamonds (currency), payments, payment methods, refunds, and platform settings. If the user asks about ANYTHING else completely unrelated to this platform, you MUST reply EXACTLY with: 'I can't help you with that.'
+
+Platform Knowledge:
+- Currency: Diamonds (♦) are the platform currency used to purchase courses. The exchange rate varies between 0.077 MYR and 0.12 MYR per diamond depending on the payment method.
+- Payment Methods: We support a wide range of payment methods including PayPal, Bank Transfer, VISA/Master Card, FPX, Google Wallet, Touch 'n Go eWallet, Duitnow, U Mobile, Shopeepay wallet, digi, Grabpay, celcom, Boost eWallet, and ATOME.
+- Features: The platform has an "AI Learning" feature that provides adaptive quizzes and study plans for learners, and a "Seller Copilot" that helps sellers generate course syllabus and quiz questions using AI.
+- Refunds: Refunds are available within 14 days of purchase if less than 20% of the course has been completed.
 
 Here is the precise list of all available courses and their EXACT prices in diamonds. You must use this information to answer user questions about courses and prices. DO NOT invent or guess prices.
 1. SUPPLY AND DEMANDS: 800 diamonds
@@ -21,18 +28,27 @@ Here is the precise list of all available courses and their EXACT prices in diam
 14. FLOW OF MONEY: 800 diamonds
 15. FINDING INFORMATION MORE ACCURATE: 800 diamonds`;
 
-const ORCHESTRATOR_PROMPT = `You are a Router Agent. Your ONLY job is to analyze the user's latest message and classify their intent into one of three categories:
+const ORCHESTRATOR_PROMPT = `You are a Router Agent. Your ONLY job is to analyze the user's latest message and classify their intent into one of five categories:
 1. TUTOR - User wants to learn a topic, understand a concept, or needs general teaching.
 2. EXAMINER - User wants to take a quiz, be tested on a topic, or have their answers evaluated.
 3. PLANNER - User wants a study plan, a roadmap, or asks about their learning progress/history.
+4. EMAIL - User explicitly asks to email them information, a plan, or notes (e.g., "email me the study plan", "send the summary to my email").
+5. SUPPORT - User asks about platform settings, currency, diamonds, refunds, payments, and payment methods.
 
-Respond EXACTLY and ONLY with one of the three words: TUTOR, EXAMINER, or PLANNER. Do not add any punctuation or extra text.`;
+Respond EXACTLY and ONLY with one of the five words: TUTOR, EXAMINER, PLANNER, EMAIL, or SUPPORT. Do not add any punctuation or extra text.`;
 
 const TUTOR_PROMPT = `You are a Tutor Agent. Your goal is to teach the user, explain complex educational topics clearly, and answer curriculum questions. Be patient, encouraging, and clear.`;
 
 const EXAMINER_PROMPT = `You are an Examiner Agent. Your goal is to strictly test the user. Create personalized quizzes, evaluate their answers critically, and point out their mistakes to help them improve.`;
 
 const PLANNER_PROMPT = `You are a Study Planner Agent. Your goal is to analyze the user's progress and formulate custom study roadmaps. Give them strategic advice on what to study next based on their history.`;
+
+const EMAIL_PROMPT = `You are an Email Agent. Your goal is to write a helpful email summarizing the study guide or topic requested by the user. Draft a professional email subject and body in JSON format:
+{
+  "subject": "Email Subject Here",
+  "body": "HTML or Plain Text Email Body Content"
+}
+Respond ONLY with valid JSON.`;
 
 export class AiService {
   static async ollamaCall(systemPrompt: string, messages: any[]) {
@@ -57,52 +73,161 @@ export class AiService {
     return data.message?.content || "";
   }
 
-  static async getChatCompletion(messages: any[], pageContext: string, userId: string) {
+  static async ollamaCallStream(
+    systemPrompt: string,
+    messages: any[],
+    onToken: (token: string) => void
+  ) {
+    const response = await fetch("http://127.0.0.1:11434/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "llama3.2",
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...messages
+        ],
+        stream: true
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Ollama API returned ${response.status}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) return "";
+
+    const decoder = new TextDecoder("utf-8");
+    let accumulated = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      const lines = chunk.split("\n");
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const parsed = JSON.parse(line);
+          const content = parsed.message?.content || "";
+          accumulated += content;
+          onToken(content);
+        } catch (e) {
+          // ignore parsing error for incomplete chunks
+        }
+      }
+    }
+    return accumulated;
+  }
+
+  static async getChatCompletionStream(
+    messages: any[],
+    pageContext: string,
+    userId: string,
+    onStatus: (agent: string, status: string) => void,
+    onToken: (token: string) => void
+  ) {
     try {
-      // Filter out old invalid responses so they don't confuse the model in-context
-      const cleanMessages = messages.filter(m => m.content !== "(invalid question)");
-      
-      let finalResponse = "";
+      // 1. Context Window Summarization (if message count > 8)
+      let cleanMessages = messages.filter((m) => m.content !== "(invalid question)");
+
+      if (cleanMessages.length > 8) {
+        onStatus("System", "Compressing chat history...");
+        const oldMessagesToSummarize = cleanMessages.slice(0, cleanMessages.length - 3);
+        const latestMessages = cleanMessages.slice(cleanMessages.length - 3);
+
+        const summaryPrompt = "Summarize the key points of the conversation so far in under 80 words. Focus strictly on user weaknesses or questions asked. Keep it concise.";
+        const summary = await this.ollamaCall(summaryPrompt, oldMessagesToSummarize);
+
+        cleanMessages = [
+          { role: "system", content: `Here is a summary of the conversation history so far: ${summary}` },
+          ...latestMessages,
+        ];
+      }
+
       let agentUsed = "support";
 
-      if (pageContext === 'CustomerService') {
-        finalResponse = await this.ollamaCall(SUPPORT_PROMPT, cleanMessages);
+      if (pageContext === "CustomerService") {
+        onStatus("Support Agent", "Retrieving platform documentation...");
+        await this.ollamaCallStream(SUPPORT_PROMPT, cleanMessages, onToken);
       } else {
         // Fetch AgentMemory and Progress
+        onStatus("Orchestrator", "Routing intent classification...");
         const memories = await prisma.agentMemory.findMany({ where: { userId } });
-        const memoryContext = memories.length > 0 
-          ? `\n\nUser Profile/Memory:\n${memories.map(m => `- [${m.agentName}] ${m.summary}`).join('\n')}`
+        const memoryContext = memories.length > 0
+          ? `\n\nUser Profile/Memory:\n${memories.map((m) => `- [${m.agentName}] ${m.summary}`).join("\n")}`
           : "";
 
         // Orchestrator Step
         const userLatestMessage = cleanMessages[cleanMessages.length - 1]?.content || "";
         const intent = await this.ollamaCall(ORCHESTRATOR_PROMPT, [{ role: "user", content: userLatestMessage }]);
-        
+
         let selectedPrompt = TUTOR_PROMPT;
         agentUsed = "tutor";
-        
+        let agentTitle = "Tutor Agent";
+        let statusMsg = "Explaining curriculum...";
+
         if (intent.includes("EXAMINER")) {
           selectedPrompt = EXAMINER_PROMPT;
           agentUsed = "examiner";
+          agentTitle = "Examiner Agent";
+          statusMsg = "Formulating quiz test questions...";
         } else if (intent.includes("PLANNER")) {
           selectedPrompt = PLANNER_PROMPT;
           agentUsed = "planner";
+          agentTitle = "Planner Agent";
+          statusMsg = "Customizing 30-day study plan...";
+          onStatus("Planner Agent", "Checking VIP/Diamond balance...");
+        } else if (intent.includes("SUPPORT")) {
+          selectedPrompt = SUPPORT_PROMPT;
+          agentUsed = "support";
+          agentTitle = "Support Agent";
+          statusMsg = "Retrieving platform documentation...";
+        } else if (intent.includes("EMAIL")) {
+          agentUsed = "email";
+          agentTitle = "Email Agent";
+          onStatus("Email Agent", "Drafting study summary email...");
+
+          const emailResponseJSON = await this.ollamaCall(EMAIL_PROMPT, cleanMessages);
+
+          let emailSubject = "Your Requested Study Summary";
+          let emailBody = "Here is the summary of your requests.";
+          try {
+            const parsed = JSON.parse(emailResponseJSON);
+            emailSubject = parsed.subject || emailSubject;
+            emailBody = parsed.body || emailBody;
+          } catch (e) {
+            emailBody = emailResponseJSON;
+          }
+
+          onStatus("System", "Running tool: sending email to learner...");
+
+          const user = await prisma.user.findUnique({ where: { id: userId } });
+          if (user?.email) {
+            await sendQuizResultsEmail(user.email, emailSubject, emailBody, `<div>${emailBody}</div>`);
+            onStatus("System", "✅ Email sent!");
+            onToken(`I've sent an email to you at **${user.email}** containing the summary.`);
+          } else {
+            onStatus("System", "❌ Email failed: User email not found");
+            onToken("I tried to send an email, but I couldn't find your registered email address.");
+          }
+          return;
         }
 
-        // Add memory context to the selected prompt
         selectedPrompt += memoryContext;
+        onStatus(agentTitle, statusMsg);
 
-        // Final Agent Step
-        finalResponse = await this.ollamaCall(selectedPrompt, cleanMessages);
+        const responseText = await this.ollamaCallStream(selectedPrompt, cleanMessages, onToken);
 
-        // Async save memory summary (run in background)
-        this.updateAgentMemory(userId, agentUsed, cleanMessages, finalResponse).catch(console.error);
+        // Async save memory summary in background
+        this.updateAgentMemory(userId, agentUsed, cleanMessages, responseText).catch(console.error);
       }
-
-      return finalResponse || "No response generated.";
     } catch (error: any) {
-      console.error("Error calling native Ollama API:", error);
-      throw new Error("Failed to get AI response");
+      console.error("Error in streaming chat completion:", error);
+      throw new Error("Failed to get streamed response");
     }
   }
 
@@ -127,8 +252,13 @@ export class AiService {
   }
 
   static async generateCourse(topicName: string) {
-    const prompt = `You are a Course Generator Agent. The user wants to create a course about: "${topicName}".
+    const prompt = `You are an Expert Course Generator Agent. The user wants to create a course about: "${topicName}".
     Generate a highly engaging syllabus and exactly 5 draft quiz questions to test learners.
+    
+    CRITICAL INSTRUCTIONS FOR QUESTIONS:
+    1. The options MUST directly relate to and logically answer the question being asked.
+    2. Provide exactly 4 options. One MUST be the correct answer, and the other 3 MUST be plausible but incorrect distractors.
+    3. The options array MUST contain REAL text sentences or phrases. DO NOT output numbers like "0", "1", "2" as options. Example: "options": ["Drinking water hydrates you", "It causes dehydration", "It makes you sleep", "It makes you hungry"].
     
     You MUST respond with valid JSON matching this exact structure, with no markdown formatting or extra text outside the JSON:
     {
@@ -136,8 +266,8 @@ export class AiService {
       "syllabus": ["Module 1: ...", "Module 2: ...", "Module 3: ..."],
       "questions": [
         {
-          "questionText": "The question text here",
-          "options": ["Option A", "Option B", "Option C", "Option D"],
+          "questionText": "The logical question text here",
+          "options": ["First real option", "Second real option", "Third real option", "Fourth real option"],
           "correctAnswer": 0
         }
       ]

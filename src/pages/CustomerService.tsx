@@ -12,7 +12,7 @@ export function CustomerService() {
   const navigate = useNavigate();
   const { userProfile } = useUser();
   const { t } = useSettings();
-  const { messages, isLoading, isTyping, initSession, sendMessage } = useChat();
+  const { messages, isLoading, isTyping, steps, initSession, sendMessage } = useChat('AiAssistant');
   const [inputValue, setInputValue] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -23,7 +23,7 @@ export function CustomerService() {
   useEffect(() => {
     // Scroll to bottom whenever messages change
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isTyping]);
+  }, [messages, isTyping, steps]);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,16 +115,48 @@ export function CustomerService() {
           )}
 
           {isTyping && (
-            <div className="flex items-end gap-2 w-full justify-start animate-in fade-in slide-in-from-bottom-2">
-              <Avatar className="w-8 h-8 shrink-0 mb-1 ring-1 ring-border">
-                <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                  <Bot className="w-4 h-4 text-primary" />
+            <div className="flex flex-col gap-3 w-full animate-in fade-in duration-300">
+              {/* Steps Visualizer */}
+              {steps && steps.length > 0 && (
+                <div className="bg-card/40 border border-border/40 rounded-2xl p-4 shadow-sm space-y-3 max-w-[85%] ml-10">
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold block mb-1">
+                    AI Execution Pipeline
+                  </span>
+                  <div className="space-y-2">
+                    {steps.map((s, idx) => {
+                      const isActive = s.statusType === 'active';
+                      const isDone = s.statusType === 'done';
+                      const isError = s.statusType === 'error';
+                      return (
+                        <div key={idx} className="flex items-center justify-between text-xs transition-all animate-in slide-in-from-left-2">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-foreground">{s.agent}</span>
+                            <span className="text-muted-foreground">• {s.status}</span>
+                          </div>
+                          <div>
+                            {isActive && <LoaderCircle className="w-3.5 h-3.5 animate-spin text-primary" />}
+                            {isDone && <span className="text-green-500 font-bold">✓</span>}
+                            {isError && <span className="text-destructive font-bold">✗</span>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </Avatar>
-              <div className="bg-card border border-border/50 rounded-2xl rounded-bl-sm px-4 py-4 shadow-sm flex items-center gap-1">
-                <div className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                <div className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                <div className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce"></div>
+              )}
+
+              {/* standard typing bubble */}
+              <div className="flex items-end gap-2 w-full justify-start animate-in fade-in slide-in-from-bottom-2">
+                <Avatar className="w-8 h-8 shrink-0 mb-1 ring-1 ring-border">
+                  <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                    <Bot className="w-4 h-4 text-primary" />
+                  </div>
+                </Avatar>
+                <div className="bg-card border border-border/50 rounded-2xl rounded-bl-sm px-4 py-4 shadow-sm flex items-center gap-1 w-fit">
+                  <div className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                  <div className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                  <div className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce"></div>
+                </div>
               </div>
             </div>
           )}

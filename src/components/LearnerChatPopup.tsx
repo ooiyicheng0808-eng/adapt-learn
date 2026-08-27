@@ -39,40 +39,48 @@ export function LearnerChatPopup() {
 
   useEffect(() => {
     if (isOpen && sellers.length === 0) {
-      api.get('/messages/sellers').then(res => setSellers(res)).catch(console.error);
+      const fakeSellers: Seller[] = [
+        { id: 'seller1', username: 'ProInstructor', profilePic: '' },
+        { id: 'seller2', username: 'TechGuru', profilePic: '' },
+        { id: 'seller3', username: 'Community Admin', profilePic: '' }
+      ];
+      setSellers(fakeSellers);
     }
   }, [isOpen, sellers.length]);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
     if (selectedSeller && isOpen) {
-      const fetchMessages = () => {
-        api.get(`/messages/conversation/${selectedSeller.id}`)
-          .then(res => setMessages(res.data))
-          .catch(console.error);
-      };
-      fetchMessages();
-      interval = setInterval(fetchMessages, 3000);
+      setMessages([
+        {
+          id: 'welcome',
+          senderId: selectedSeller.id,
+          receiverId: userProfile?.id || 'me',
+          content: `Hi there! I am ${selectedSeller.username}. How can I help you with my courses today?`,
+          createdAt: new Date().toISOString()
+        }
+      ]);
     }
-    return () => clearInterval(interval);
   }, [selectedSeller, isOpen]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = async () => {
+  const handleSend = () => {
     if (!inputText.trim() || !selectedSeller) return;
-    try {
-      const res = await api.post('/messages', {
-        receiverId: selectedSeller.id,
-        content: inputText
-      });
-      setMessages([...messages, res.data]);
-      setInputText('');
-    } catch (error) {
-      console.error(error);
-    }
+    
+    const newMsg: Message = {
+      id: Date.now().toString(),
+      senderId: userProfile?.id || 'me',
+      receiverId: selectedSeller.id,
+      content: inputText,
+      createdAt: new Date().toISOString()
+    };
+    
+    setMessages(prev => [...prev, newMsg]);
+    
+    // Removed auto-reply mock as requested
+    setInputText('');
   };
 
   if (userProfile?.role === 'seller') return null;

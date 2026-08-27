@@ -12,9 +12,11 @@ router.post('/create', createCourse);
 // Route to get all courses
 router.get('/all', async (req, res) => {
   try {
-    const courses = await import('../index').then(m => m.prisma.course.findMany({
+    const { PrismaClient } = await import('@prisma/client');
+    const prisma = new PrismaClient();
+    const courses = await prisma.course.findMany({
       include: { seller: { select: { username: true } }, questions: true }
-    }));
+    });
     res.json(courses);
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
@@ -24,10 +26,12 @@ router.get('/all', async (req, res) => {
 // Route to get a specific course
 router.get('/:id', async (req, res) => {
   try {
-    const course = await import('../index').then(m => m.prisma.course.findUnique({
+    const { PrismaClient } = await import('@prisma/client');
+    const prisma = new PrismaClient();
+    const course = await prisma.course.findUnique({
       where: { id: req.params.id },
       include: { seller: { select: { username: true } }, questions: true }
-    }));
+    });
     if (!course) return res.status(404).json({ error: 'Course not found' });
     res.json(course);
   } catch (error) {
@@ -41,22 +45,26 @@ router.post('/:id/questions', async (req, res) => {
     const { questions, courseName } = req.body;
     let courseId = req.params.id;
     const sellerId = (req as any).user?.id || 'dummy-seller'; // fallback if no auth
-    const prisma = (await import('../index')).prisma;
+    const { PrismaClient } = await import('@prisma/client');
+    const prisma = new PrismaClient();
     
-    // If the ID is short (hardcoded product ID like '1', '2'), we create a proxy course in the DB
-    if (courseId.length < 10) {
-      // Check if it already exists to avoid duplicates
-      let course = await prisma.course.findFirst({ where: { name: courseName || `Course ${courseId}` }});
-      if (!course) {
-        course = await prisma.course.create({
-          data: {
-            name: courseName || `Course ${courseId}`,
-            sellerId,
-            price: 500,
-          }
+    // Ensure course exists (supports both UUIDs and short hardcoded IDs)
+    let course = await prisma.course.findUnique({ where: { id: courseId } });
+    if (!course) {
+      let dummySeller = await prisma.user.findFirst({ where: { role: 'seller' } });
+      if (!dummySeller) {
+        dummySeller = await prisma.user.create({
+          data: { email: 'community@seller.com', username: 'Community Seller', role: 'seller', passwordHash: 'none' }
         });
       }
-      courseId = course.id;
+      course = await prisma.course.create({
+        data: {
+          id: courseId, // Ensure exact ID is used
+          name: courseName || `Course ${courseId}`,
+          sellerId: dummySeller.id,
+          price: 500,
+        }
+      });
     }
 
     // Add questions

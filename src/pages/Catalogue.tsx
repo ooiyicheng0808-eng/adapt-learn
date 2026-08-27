@@ -32,7 +32,7 @@ export function Catalogue() {
         const data = await api.get('/course/all');
         const formatted = data.map((c: any) => ({
           id: c.id,
-          name: c.name.toUpperCase(),
+          name: c.name?.toUpperCase() || 'UNTITLED COURSE',
           brand: c.seller?.username?.toUpperCase() || 'COMMUNITY',
           price: c.price,
           // Since they are manually uploading random files/videos, we will use a default image for DB courses

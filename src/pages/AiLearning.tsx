@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Brain, Target, Zap, ChevronRight, CheckCircle2, AlertTriangle, BookOpen, Activity, Play, Loader2 } from 'lucide-react';
+import { ArrowLeft, Brain, Target, Zap, ChevronRight, CheckCircle2, AlertTriangle, BookOpen, Activity, Play, Loader2, Compass, ArrowRight } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
 import { Progress } from '../components/ui/progress';
@@ -46,6 +46,30 @@ const getQuizQuestions = (courseName: string) => [
     correctAnswer: 2,
     topic: "Performance Metrics",
     difficulty: "Hard"
+  },
+  {
+    question: `What is the most common pitfall when learning ${courseName}?`,
+    options: [
+      "Asking too many questions",
+      "Skipping the basics and rushing to advanced topics",
+      "Collaborating with peers",
+      "Taking detailed notes"
+    ],
+    correctAnswer: 1,
+    topic: "Learning Strategies",
+    difficulty: "Easy"
+  },
+  {
+    question: `How does mastering ${courseName} impact overall professional growth?`,
+    options: [
+      "It limits your focus to a single domain",
+      "It makes you entirely dependent on theoretical knowledge",
+      "It builds a robust framework for solving complex problems",
+      "It has no measurable impact on career advancement"
+    ],
+    correctAnswer: 2,
+    topic: "Professional Development",
+    difficulty: "Medium"
   }
 ];
 
@@ -104,33 +128,55 @@ export function AiLearning() {
     setActiveCourseId(courseId);
     setCourseName(selected.name);
 
+    let sellerQuestions: any[] = [];
+    try {
+      const data = await api.get(`/course/${courseId}`);
+      if (data && data.questions && data.questions.length > 0) {
+        sellerQuestions = data.questions.map((q: any) => {
+          let options = [];
+          try { options = JSON.parse(q.options); } catch (e) { options = ["A", "B", "C", "D"]; }
+          return {
+            question: q.questionText,
+            options,
+            correctAnswer: q.correctAnswer,
+            topic: "Course Material (Seller)",
+            difficulty: "Medium"
+          };
+        });
+      }
+    } catch (err) {
+      // Expected for hardcoded courses without DB entry
+    }
+
+    let aiQuestions: any[] = [];
     if (courseId.length > 10) {
-      // UUID (DB Course)
+      aiQuestions = getQuizQuestions(selected.name);
+    } else {
+      const loadingToastId = toast.loading("AI is generating customized quiz questions for this course...");
       try {
-        const data = await api.get(`/course/${courseId}`);
-        if (data && data.questions && data.questions.length > 0) {
-          setQuizQuestions(data.questions.map((q: any) => {
-            let options = [];
-            try { options = JSON.parse(q.options); } catch (e) { options = ["A", "B", "C", "D"]; }
-            return {
-              question: q.questionText,
-              options,
-              correctAnswer: q.correctAnswer,
-              topic: "Course Material",
-              difficulty: "Medium"
-            };
+        const response = await api.post('/chat/generate-course', { topicName: selected.name });
+        if (response && response.questions) {
+          aiQuestions = response.questions.map((q: any) => ({
+            question: q.questionText,
+            options: q.options,
+            correctAnswer: q.correctAnswer,
+            topic: "AI Generated",
+            difficulty: "Medium"
           }));
         } else {
-          setQuizQuestions(getQuizQuestions(selected.name));
+          aiQuestions = getQuizQuestions(selected.name);
         }
       } catch (err) {
-        console.error("Failed to load DB course", err);
-        setQuizQuestions(getQuizQuestions(selected.name));
+        console.error("Failed to generate AI questions", err);
+        aiQuestions = getQuizQuestions(selected.name);
+      } finally {
+        toast.dismiss(loadingToastId);
       }
-    } else {
-      // Hardcoded product
-      setQuizQuestions(getQuizQuestions(selected.name));
     }
+
+    // Combine seller questions and AI questions
+    const combinedQuestions = [...sellerQuestions, ...aiQuestions];
+    setQuizQuestions(combinedQuestions);
     
     setPhase(0);
   };
@@ -201,7 +247,7 @@ export function AiLearning() {
             
             // Post evaluation
             setLoadingText("Synthesizing Personalized Study Plan...");
-            const { data } = await api.post('/chat/evaluate-quiz', {
+            const data = await api.post('/chat/evaluate-quiz', {
               courseId: activeCourseId,
               courseName,
               score,

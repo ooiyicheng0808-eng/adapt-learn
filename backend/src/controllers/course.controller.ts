@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
-import { prisma } from '../index';
+import { PrismaClient } from '@prisma/client';
 import { sendCourseAlertEmail } from '../utils/email';
+
+const prisma = new PrismaClient();
 
 export const createCourse = async (req: Request, res: Response) => {
   try {

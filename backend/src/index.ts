@@ -15,7 +15,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/messages", messageRoutes);
-app.use("/api/courses", courseRoutes);
+app.use("/api/course", courseRoutes);
 
 app.get("/", (req, res) => {
     res.send("API is running...");
