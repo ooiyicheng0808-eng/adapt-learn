@@ -1,6 +1,5 @@
 <div align="center">
-  <img src="./image/favicon.png" alt="Logo" width="80" height="80">
-  <h1 align="center">Course Seller Agent 🤖🎓</h1>
+  <h1 align="center">AdaptLearn platform 🤖🎓</h1>
   <p align="center">
     <strong>A next-generation AI-powered educational marketplace connecting learners and course sellers.</strong>
   </p>
@@ -10,7 +9,7 @@
 
 ## 🌟 Overview
 
-**Course Seller Agent** is a full-stack, AI-driven educational platform built to revolutionize how people learn and how creators sell content. It goes beyond a simple marketplace by integrating **Adaptive AI Assessments**, **Personalized Study Plans**, and **Intelligent AI Assistants** tailored for both the Learner and the Seller.
+**AdaptLearn platform** is a full-stack, AI-driven educational platform built to revolutionize how people learn and how creators sell content. It goes beyond a simple marketplace by integrating **Adaptive AI Assessments**, **Personalized Study Plans**, and **Intelligent AI Assistants** tailored for both the Learner and the Seller.
 
 Built with modern web technologies (React 18, Vite, Node.js, Prisma) and enhanced with OpenAI integrations, this platform offers a seamless, beautiful, and highly interactive user experience.
 
@@ -60,7 +59,7 @@ This project is built using a modern, scalable, and type-safe architecture.
 ## 📁 Project Structure
 
 ```text
-📦 course-seller-agent
+📦 adaptlearn-platform
  ┣ 📂 backend                 # Node.js Express Server
  ┃ ┣ 📂 prisma              # Database schema & migrations (schema.prisma)
  ┃ ┣ 📂 src
