@@ -1,81 +1,135 @@
-# Course Seller Agent
+<div align="center">
+  <img src="./image/favicon.png" alt="Logo" width="80" height="80">
+  <h1 align="center">Course Seller Agent 🤖🎓</h1>
+  <p align="center">
+    <strong>A next-generation AI-powered educational marketplace connecting learners and course sellers.</strong>
+  </p>
+</div>
 
-A full-stack AI-powered educational platform designed to enhance the learning experience with adaptive AI assessments, personalized study plans, and intelligent customer service. It caters to both learners and course sellers.
+---
 
-## 🚀 Features
+## 🌟 Overview
 
-### For Learners
-- **Course Catalogue & Unlocked Courses**: Browse available courses and track the ones you have unlocked.
-- **AI Self-Learning System**: An adaptive quiz system that evaluates your knowledge on specific courses, tracks your accuracy, identifies weak areas, and generates a personalized study plan.
-- **AI Customer Service**: A smart AI-powered chatbot to assist you with inquiries about the platform, technical issues, and course-related questions.
-- **Diamond Recharge**: Recharge your virtual currency (Diamonds) seamlessly to purchase new courses and unlock features.
-- **Progress Tracking**: Real-time progress monitoring showing your accuracy, streak, and performance metrics.
+**Course Seller Agent** is a full-stack, AI-driven educational platform built to revolutionize how people learn and how creators sell content. It goes beyond a simple marketplace by integrating **Adaptive AI Assessments**, **Personalized Study Plans**, and **Intelligent AI Assistants** tailored for both the Learner and the Seller.
 
-### For Course Sellers
-- **Dashboard & Analytics**: Monitor learner progress, attempts, and overall performance across different courses.
-- **Course Management**: Platform capability to handle dynamic courses and their related AI assessments.
+Built with modern web technologies (React 18, Vite, Node.js, Prisma) and enhanced with OpenAI integrations, this platform offers a seamless, beautiful, and highly interactive user experience.
 
-## 🛠️ Tech Stack
+---
 
-**Frontend:**
-- **Framework**: React 18 + Vite
-- **Styling**: Tailwind CSS
-- **Components**: Radix UI (accessible, unstyled components)
-- **Routing**: React Router
-- **Icons**: Lucide React
-- **Charts**: Recharts
+## ✨ Core Features & Special Capabilities
 
-**Backend:**
-- **Server**: Node.js & Express
-- **Database**: SQLite (managed via Prisma ORM)
-- **AI Integration**: OpenAI API (for chatbot and potential personalized content)
-- **Security**: JWT (JSON Web Tokens) & Bcrypt
+### 🧑‍🎓 For Learners
+
+*   **🧠 AI Self-Learning System (Adaptive Quizzes):** Take intelligent quizzes that evaluate your knowledge dynamically. The system tracks your accuracy, identifies weak spots, and uses AI to generate a **Personalized Study Plan** based on your performance.
+*   **🛒 Interactive Course Catalogue:** Browse, filter, and discover new courses across various topics. Once unlocked, track your progress directly from your dashboard.
+*   **💬 AI Customer Service Chatbot:** An intelligent, context-aware AI assistant ready to help learners troubleshoot technical issues, understand platform mechanics, or recommend courses.
+*   **💎 Virtual Wallet (Diamond Recharge):** A built-in virtual currency system. Recharge "Diamonds" to unlock premium courses effortlessly.
+*   **📈 Real-time Progress Tracking:** Monitor your learning streaks, attempt history, and topic mastery through beautiful, interactive charts.
+*   **✉️ Direct Messaging:** Communicate directly with course sellers for personalized feedback and Q&A.
+
+### 💼 For Course Sellers
+
+*   **📊 Advanced Analytics Dashboard:** Get a bird's-eye view of your business. Track today's sales, revenue growth, and detailed learner progress across your published courses.
+*   **🤖 Seller Copilot (AI Assistant):** A dedicated AI agent just for sellers! Use the Copilot to brainstorm course topics, generate marketing copy, or analyze your sales data.
+*   **📚 Dynamic Course Creation:** Easily upload new courses, define syllabuses, and set pricing.
+*   **📝 Automated Assessment Builder:** Create interactive quizzes for your courses with a streamlined question builder to test your learners effectively.
+*   **📥 Seller Inbox:** Manage direct messages from your students, answer their queries, and build a loyal learning community.
+
+---
+
+## 🛠️ Tech Stack & Architecture
+
+This project is built using a modern, scalable, and type-safe architecture.
+
+### **Frontend (Client)**
+*   **Framework:** React 18 powered by [Vite](https://vitejs.dev/) for lightning-fast HMR and building.
+*   **Styling:** [Tailwind CSS v4](https://tailwindcss.com/) for utility-first styling.
+*   **UI Components:** [Radix UI](https://www.radix-ui.com/) (Headless, accessible components) combined with Lucide React for beautiful iconography.
+*   **Data Visualization:** [Recharts](https://recharts.org/) for dynamic sales and progress charts.
+*   **State & Routing:** React Router for seamless SPA navigation.
+
+### **Backend (Server & Database)**
+*   **Runtime:** Node.js with Express.js.
+*   **Database:** SQLite, fully managed and typed via [Prisma ORM](https://www.prisma.io/).
+*   **AI Integration:** OpenAI API (`openai` SDK) powering the Learner Chatbot, Seller Copilot, and Adaptive Study Plan generator.
+*   **Authentication & Security:** JWT (JSON Web Tokens) for session management and Bcrypt for secure password hashing.
+*   **Validation:** Zod for robust runtime type checking and API payload validation.
+
+---
 
 ## 📁 Project Structure
 
-- `/src`: Frontend React application.
-  - `/pages`: Main application views (e.g., `AiLearning`, `Catalogue`, `Login`, `CustomerService`).
-  - `/components`: Reusable UI components.
-  - `/contexts`: React contexts for state management (`UserContext`, `SettingsContext`).
-  - `/lib`: Utility functions and API integrations.
-- `/backend`: Node.js/Express server and database.
-  - `/src`: Backend API routes and logic.
-  - `/prisma`: Prisma schema defining the database models (`User`, `ChatSession`, `Message`, `Topic`, `UserProgress`, `Attempt`).
+```text
+📦 course-seller-agent
+ ┣ 📂 backend                 # Node.js Express Server
+ ┃ ┣ 📂 prisma              # Database schema & migrations (schema.prisma)
+ ┃ ┣ 📂 src
+ ┃ ┃ ┣ 📂 controllers       # API logic
+ ┃ ┃ ┣ 📂 routes            # Express routes (auth, chat, course, message, progress)
+ ┃ ┃ ┗ 📜 index.ts          # Server entry point
+ ┃ ┗ 📜 package.json
+ ┣ 📂 src                     # React Frontend
+ ┃ ┣ 📂 assets              # Static assets
+ ┃ ┣ 📂 components          # Reusable UI components (ProductCard, RechargeModal, etc.)
+ ┃ ┣ 📂 contexts            # Global React Contexts
+ ┃ ┣ 📂 lib                 # Utility functions & API clients
+ ┃ ┣ 📂 pages               # Main views (AiLearning, Catalogue, SellerCopilot, etc.)
+ ┃ ┣ 📜 App.tsx             # Root component
+ ┃ ┗ 📜 main.tsx            # React DOM entry
+ ┣ 📂 image                   # Mockups, icons, and platform images
+ ┣ 📜 index.html              # Main HTML template
+ ┗ 📜 package.json            # Frontend dependencies
+```
 
-## ⚙️ Getting Started
+---
+
+## 🚀 Getting Started
+
+Follow these steps to run the platform locally.
 
 ### Prerequisites
-- Node.js
-- npm or yarn
+*   [Node.js](https://nodejs.org/) (v18 or higher recommended)
+*   An [OpenAI API Key](https://platform.openai.com/)
 
-### Installation & Setup
+### 1. Backend Setup
 
-1. **Backend Setup**
-   ```bash
-   cd backend
-   npm install
-   
-   # Set up your environment variables
-   # Create a .env file and configure DATABASE_URL and OPENAI_API_KEY
-   
-   # Run database migrations
-   npx prisma db push
-   
-   # Start the backend development server
-   npm run dev
-   ```
+Open a terminal and navigate to the backend directory:
 
-2. **Frontend Setup**
-   ```bash
-   # From the root directory
-   npm install
-   
-   # Start the frontend development server
-   npm run dev
-   ```
+```bash
+cd backend
 
-3. **Access the application**
-   Open your browser and navigate to `http://localhost:5173` (or the port Vite provides).
+# Install dependencies
+npm install
+
+# Create a .env file based on the environment requirements
+# You will need to set DATABASE_URL (for SQLite) and OPENAI_API_KEY
+echo 'DATABASE_URL="file:./dev.db"' > .env
+echo 'OPENAI_API_KEY="your-openai-api-key-here"' >> .env
+
+# Initialize the database schema
+npx prisma db push
+
+# Start the development server (runs on port 3000 by default)
+npm run dev
+```
+
+### 2. Frontend Setup
+
+Open a new terminal window and navigate to the project root:
+
+```bash
+# Install dependencies
+npm install
+
+# Start the Vite development server
+npm run dev
+```
+
+### 3. Access the Application
+Open your browser and navigate to the local URL provided by Vite (usually `http://localhost:5173`).
+
+---
 
 ## 📄 License
-This project is licensed under the ISC License.
+
+This project is licensed under the [ISC License](LICENSE).
