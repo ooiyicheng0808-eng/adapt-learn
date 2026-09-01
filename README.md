@@ -1,108 +1,123 @@
 <div align="center">
-  <h1 align="center">AdaptLearn platform 🤖🎓</h1>
-  <p align="center">
-    <strong>A next-generation Multi-Agent AI educational marketplace connecting learners and course sellers powered by Local LLMs (Ollama / Llama 3.2).</strong>
+  <h1>AdaptLearn Platform</h1>
+  <p>
+    <strong>A platform for sharing skills and learning, powered by local AI (Ollama & Llama 3.2).</strong>
   </p>
 </div>
 
 ---
 
-## 🌟 Overview
+## Overview
 
-**AdaptLearn platform** is a full-stack, multi-agent AI-driven educational platform built to revolutionize how people learn and how creators sell content. 
+**AdaptLearn** is a learning marketplace for anyone who wants to learn new skills or sell their own courses—ranging from knowledge and money management to practical life skills and any topic summaries.
 
-Rather than relying on a simple chatbot, AdaptLearn utilizes a sophisticated **7-Agent Backend Architecture** that dynamically classifies user intent, routes requests to domain-specialized agents, maintains persistent cross-session memory, and runs **100% locally via Ollama (Llama 3.2 model)** for maximum privacy, zero API costs, and low-latency responses.
+Instead of just using a basic AI chatbot, AdaptLearn uses **7 specialized AI helpers** running directly on your computer using Ollama and Llama 3.2. The system figures out what you need, sends your question to the right helper, remembers your progress over time, and keeps chat histories fast and clean.
 
----
-
-## 🧠 7-Agent Autonomous Architecture
-
-The system features an autonomous multi-agent orchestration layer (`AiService`) powered by **Ollama / Llama 3.2**. Depending on the user's questions or page context, an **Orchestrator Agent** dynamically routes execution to specialized sub-agents:
-
-1. **🧭 Router / Orchestrator Agent:** Classifies user intent in real-time to select the appropriate specialized agent.
-2. **📖 Tutor Agent:** Patiently explains complex educational concepts, breaks down curriculum, and answers technical learning questions.
-3. **📝 Examiner Agent:** Strictly evaluates learner answers, generates adaptive quizzes on the fly, and highlights weaknesses.
-4. **📅 Study Planner Agent:** Analyzes user mastery history to generate custom 30-day study roadmaps and strategic learning paths.
-5. **📧 Email Agent:** Automatically formulates structured HTML/Text study guides and executes background tools to email users directly via Nodemailer.
-6. **🎧 Customer Support Agent:** Trained on platform domain knowledge (diamond currency exchange rates, 14-day refund policies, eWallet payments) to handle user support.
-7. **💼 Seller Copilot Agent:** Assists course creators on their dashboard by generating syllabus topics, structuring quiz questions, and writing marketing copy.
-
----
-
-## ✨ Core Features & Special Capabilities
-
-### 🧑‍🎓 For Learners
-
-*   **🧠 Adaptive AI Self-Learning System:** Dynamic quiz evaluation that tracks accuracy, pinpoints weak areas, and updates your persistent learning profile.
-*   **💾 Long-Term Agent Memory:** Features an `AgentMemory` system in Prisma that records user strengths, weaknesses, and learning styles across sessions so agents provide personalized guidance over time.
-*   **⚡ Context Compression:** Automatic context window summarization when chat history grows long, preserving token context without quality degradation.
-*   **🛒 Interactive Course Catalogue:** Browse, filter, and purchase courses across diverse categories using platform currency.
-*   **💎 Virtual Wallet (Diamond Recharge):** Integrated diamond virtual currency with support for eWallets (TnG eWallet, GrabPay, Boost, ShopeePay), DuitNow, FPX, and credit cards.
-*   **✉️ Direct Seller Messaging & Automated Email Summaries:** Send direct messages to sellers or ask the Email Agent to send study summaries directly to your inbox.
-
-### 💼 For Course Sellers
-
-*   **📊 Advanced Analytics Dashboard:** Monitor real-time sales metrics, revenue growth, and student course completion progress.
-*   **🤖 Seller Copilot Agent:** Generate full course syllabuses and assessment question banks powered by local Llama 3.2 reasoning.
-*   **📚 Dynamic Course & Quiz Builder:** Create, edit, and publish courses with customizable pricing (in Diamonds) and built-in interactive quizzes.
-*   **📥 Seller Inbox:** Centralized messaging center to answer student inquiries and build an active learning community.
+```mermaid
+graph TD
+    User([Learner / Seller UI]) --> Router[1. Router Agent]
+    Router -->|Learning| Tutor[2. Tutor Agent]
+    Router -->|Quizzes| Examiner[3. Examiner Agent]
+    Router -->|Study Plans| Planner[4. Learning Planner Agent]
+    Router -->|Email Summaries| Email[5. Email Agent]
+    Router -->|Support| Support[6. Customer Support Agent]
+    Router -->|Course Creation| Copilot[7. Seller Copilot Agent]
+    
+    Tutor & Examiner & Planner --> Memory[(Database Memory)]
+    Tutor & Examiner & Support & Copilot --> Ollama[Local Ollama / Llama 3.2]
+    Email --> Nodemailer[Email Service]
+```
 
 ---
 
-## 🛠️ Tech Stack & Architecture
+## 7 AI Helper Agents
 
-### **AI Engine (100% Local & Privacy-Focused)**
-*   **LLM Provider:** [Ollama](https://ollama.com/) running **Llama 3.2** (`llama3.2` model).
-*   **Orchestration:** Custom TypeScript Multi-Agent Router & Context Window Compressor (`AiService`).
-*   **Email Tool Execution:** Integrated Nodemailer background job executor triggered by the Email Agent.
+AdaptLearn uses a custom AI service (`AiService`) that picks the best agent for your prompt:
 
-### **Frontend (Client)**
-*   **Framework:** React 18 powered by [Vite](https://vitejs.dev/).
-*   **Styling:** [Tailwind CSS v4](https://tailwindcss.com/).
-*   **UI Components:** [Radix UI](https://www.radix-ui.com/) accessible primitives & Lucide React icons.
-*   **Data Visualization:** [Recharts](https://recharts.org/) for analytics graphs.
-*   **State & Routing:** React Router.
-
-### **Backend (Server & Database)**
-*   **Runtime:** Node.js with Express.js (TypeScript).
-*   **Database:** SQLite managed via [Prisma ORM](https://www.prisma.io/) (`User`, `AgentMemory`, `ChatSession`, `QuizAttempt`, `Topic`, `Course`, `DirectMessage`).
-*   **Security:** JWT (JSON Web Tokens) & Bcrypt password hashing.
-*   **Validation:** Zod schema validation.
+1. **Router Agent:** Reads your message and sends it to the right helper.
+2. **Tutor Agent:** Gives step-by-step explanations, breaks down lessons (useful information, finance, tech, life skills), and answers questions.
+3. **Examiner Agent:** Creates quick quizzes, grades your answers, and points out areas to improve.
+4. **Learning Planner Agent:** Looks at your past progress to build custom 30-day study plans.
+5. **Email Agent:** Writes clean email summaries of lessons and sends them directly to your inbox.
+6. **Customer Support Agent:** Answers questions about payments, refund rules, and using platform diamonds.
+7. **Seller Copilot Agent:** Helps creators outline courses, build quiz questions, and write sales descriptions.
 
 ---
 
-## 📁 Project Structure
+## Key Features
+
+### For Learners
+
+- **Smart Quizzes:** Automatically creates quizzes and highlights areas where you need more practice.
+- **Personalized Memory:** Remembers your learning history and weak spots so recommendations improve over time.
+- **Fast & Clean Chats:** Automatically condenses long chat histories so conversations stay fast without losing context.
+- **Explore Any Topic:** Browse courses on useful information, finance tips, tech life skills, or summarized guides.
+- **Diamond Wallet:** Easy payment with local eWallets (Master/Visa card, PayPal, Google Wallet, Bank Transfer,FPX, Grabpay, TNG, or Boost).
+- **Chat & Email Summaries:** Message course sellers directly or ask the AI to email lesson summaries to your inbox.
+
+### For Course Sellers
+
+- **Sales Dashboard:** Track your earnings, course views, and completion rates in real time.
+- **AI Copilot for Creators:** Use AI to instantly generate course outlines, lesson topics, and quiz questions.
+- **Course Builder:** Easily create courses, set prices in diamonds, and add interactive quizzes.
+- **Seller Inbox:** Reply to buyer questions and keep in touch with your community.
+
+---
+
+## Tech Stack
+
+### AI Engine (100% Local & Private)
+- **AI Model:** Runs **Llama 3.2** locally on your computer using [Ollama](https://ollama.com/).
+- **AI Service:** Custom TypeScript backend (`AiService`) to route questions and manage chat memory.
+- **Email Tool:** Nodemailer to send lesson summaries to your email.
+
+### Frontend (Client)
+- **Framework:** React 18 with [Vite](https://vitejs.dev/).
+- **Styling:** Tailwind CSS v4.
+- **UI Components:** Radix UI and Lucide React icons.
+- **Charts:** Recharts for sales and progress graphs.
+- **Routing:** React Router.
+
+### Backend & Database
+- **Server:** Node.js with Express (TypeScript).
+- **Database:** SQLite managed with [Prisma ORM](https://www.prisma.io/).
+- **Security:** JWT login tokens and Bcrypt password encryption.
+- **Validation:** Zod schema validation.
+
+---
+
+## Project Structure
 
 ```text
 📦 adaptlearn-platform
  ┣ 📂 backend                 # Express Server & Local AI Multi-Agent Service
- ┃ ┣ 📂 prisma              # Prisma Schema (AgentMemory, ChatSession, UserProgress, etc.)
+ ┃ ┣ 📂 prisma              # Database models (User, AgentMemory, ChatSession, etc.)
  ┃ ┣ 📂 src
  ┃ ┃ ┣ 📂 controllers       # API Controllers
- ┃ ┃ ┣ 📂 routes            # Routes (auth, chat, course, message, progress)
- ┃ ┃ ┣ 📂 services          # Multi-Agent Router & Ollama Llama 3.2 Integration (ai.service.ts)
- ┃ ┃ ┗ 📜 index.ts          # Express entry point
+ ┃ ┃ ┣ 📂 routes            # API Routes (auth, chat, course, message, progress)
+ ┃ ┃ ┣ 📂 services          # Multi-Agent Router & Ollama Integration (ai.service.ts)
+ ┃ ┃ ┗ 📜 index.ts          # Express server entry point
  ┃ ┗ 📜 package.json
  ┣ 📂 src                     # React Frontend
- ┃ ┣ 📂 components          # Reusable UI components & dialogs
- ┃ ┣ 📂 contexts            # User & System React Contexts
- ┃ ┣ 📂 pages               # Views (AiLearning, SellerCopilot, CustomerService, Catalogue)
- ┃ ┣ 📜 App.tsx             # Root Component
- ┃ ┗ 📜 main.tsx            # Entry point
- ┣ 📂 image                   # Assets & mockups
+ ┃ ┣ 📂 components          # UI components & dialogs
+ ┃ ┣ 📂 contexts            # React state contexts
+ ┃ ┣ 📂 pages               # App pages (AiLearning, SellerCopilot, CustomerService, Catalogue)
+ ┃ ┣ 📜 App.tsx             # Main App layout
+ ┃ ┗ 📜 main.tsx            # Frontend entry point
+ ┣ 📂 image                   # Screenshots & graphics
  ┗ 📜 README.md
 ```
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
-*   [Node.js](https://nodejs.org/) (v18+)
-*   [Ollama](https://ollama.com/) installed and running locally with the `llama3.2` model pulled:
-    ```bash
-    ollama pull llama3.2
-    ```
+- [Node.js](https://nodejs.org/) (v18+)
+- [Ollama](https://ollama.com/) installed and running locally with the `llama3.2` model downloaded:
+  ```bash
+  ollama pull llama3.2
+  ```
 
 ### 1. Backend Setup
 
@@ -112,33 +127,34 @@ cd backend
 # Install dependencies
 npm install
 
-# Create .env file
+# Create environment file
 echo 'DATABASE_URL="file:./dev.db"' > .env
 
-# Initialize database schema with Prisma
+# Set up the database with Prisma
 npx prisma db push
 
-# Start the server (connects to http://127.0.0.1:11434 Ollama API)
+# Start the backend server
 npm run dev
 ```
 
 ### 2. Frontend Setup
 
-Open a new terminal window in the root directory:
+Open a new terminal window in the main project folder:
 
 ```bash
 # Install dependencies
 npm install
 
-# Start Vite dev server
+# Start the Vite development server
 npm run dev
 ```
 
-### 3. Access Application
-Navigate to `http://localhost:5173` in your browser. Ensure Ollama is running in the background (`ollama serve`).
+### 3. Open in Browser
+
+Open `http://localhost:5173` in your browser. Make sure Ollama is running in the background (`ollama serve`).
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the [ISC License](LICENSE).
