@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, User } from 'lucide-react';
+import { Send, User, ArrowLeft } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from './ui/card';
 import { api } from '../lib/api';
@@ -81,7 +81,6 @@ export function SellerInbox() {
     
     setConversation(prev => [...prev, newMsg]);
     
-    // Removed auto-reply mock as requested
     setInputText('');
   };
 
@@ -90,9 +89,12 @@ export function SellerInbox() {
   };
 
   return (
-    <div className="flex w-full h-[600px] border rounded-lg overflow-hidden bg-card shadow-sm">
-      <div className="w-1/3 border-r flex flex-col bg-muted/20">
-        <div className="p-4 border-b bg-muted/40 font-semibold text-lg">Inbox</div>
+    <div className="flex w-full h-[calc(100vh-150px)] md:h-[600px] border rounded-lg overflow-hidden bg-card shadow-sm">
+      {/* Contact List */}
+      <div className={`border-r flex-col bg-muted/20 ${selectedUserId ? 'hidden md:flex md:w-1/3' : 'flex w-full md:w-1/3'}`}>
+        <div className="p-4 border-b bg-muted/40 font-semibold text-lg flex items-center justify-between">
+          Inbox
+        </div>
         <div className="flex-1 overflow-y-auto">
           {inboxMessages.length === 0 && (
             <div className="p-4 text-center text-sm text-muted-foreground">No messages yet.</div>
@@ -119,23 +121,35 @@ export function SellerInbox() {
         </div>
       </div>
       
-      <div className="flex-1 flex flex-col">
+      {/* Chat Interface */}
+      <div className={`flex-1 flex-col ${selectedUserId ? 'flex w-full' : 'hidden md:flex'}`}>
         {!selectedUserId ? (
           <div className="flex-1 flex items-center justify-center text-muted-foreground">
             Select a conversation to view messages.
           </div>
         ) : (
           <>
-            <div className="p-4 border-b font-semibold flex items-center gap-3 bg-muted/10">
-              <User className="h-5 w-5 text-primary" />
-              Chatting with {inboxMessages.find(m => getOtherUser(m).id === selectedUserId) ? getOtherUser(inboxMessages.find(m => getOtherUser(m).id === selectedUserId)!).username : 'Student'}
+            <div className="p-4 border-b font-semibold flex items-center gap-3 bg-muted/10 shrink-0">
+              <button 
+                onClick={() => setSelectedUserId(null)} 
+                className="md:hidden p-2 -ml-2 rounded-full hover:bg-muted/50"
+              >
+                <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+              </button>
+              <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                <User className="h-4 w-4 text-primary" />
+              </div>
+              <span className="truncate">
+                {inboxMessages.find(m => getOtherUser(m).id === selectedUserId) ? getOtherUser(inboxMessages.find(m => getOtherUser(m).id === selectedUserId)!).username : 'Student'}
+              </span>
             </div>
+            
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background">
               {conversation.map(msg => {
                 const isMe = msg.senderId === userProfile?.id;
                 return (
                   <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                    <div className={`px-4 py-2 rounded-2xl max-w-[70%] text-sm ${isMe ? 'bg-primary text-primary-foreground rounded-tr-sm' : 'bg-muted rounded-tl-sm'}`}>
+                    <div className={`px-4 py-2 rounded-2xl max-w-[85%] md:max-w-[70%] text-sm ${isMe ? 'bg-primary text-primary-foreground rounded-tr-sm' : 'bg-muted rounded-tl-sm'}`}>
                       {msg.content}
                     </div>
                   </div>
@@ -143,7 +157,8 @@ export function SellerInbox() {
               })}
               <div ref={messagesEndRef} />
             </div>
-            <div className="p-4 border-t flex gap-2 bg-muted/10">
+            
+            <div className="p-3 md:p-4 border-t flex gap-2 bg-muted/10 shrink-0">
               <input
                 type="text"
                 value={inputText}
