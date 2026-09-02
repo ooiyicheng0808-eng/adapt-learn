@@ -1,7 +1,10 @@
 import { PrismaClient } from "@prisma/client";
 import { sendQuizResultsEmail } from "../utils/email";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const prisma = new PrismaClient();
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const geminiModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 const SUPPORT_PROMPT = `You are a helpful Customer Service Platform Assistant for an educational platform. You MUST answer questions related to education, courses, diamonds (currency), payments, payment methods, refunds, and platform settings. If the user asks about ANYTHING else completely unrelated to this platform, you MUST reply EXACTLY with: 'I can't help you with that.'
 
@@ -52,25 +55,39 @@ Respond ONLY with valid JSON.`;
 
 export class AiService {
   static async ollamaCall(systemPrompt: string, messages: any[]) {
-    const response = await fetch("http://127.0.0.1:11434/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "llama3.2",
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...messages
-        ],
-        stream: false
-      })
-    });
+    try {
+      const response = await fetch("http://127.0.0.1:11434/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "llama3.2",
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...messages
+          ],
+          stream: false
+        })
+      });
 
-    if (!response.ok) {
-      throw new Error(`Ollama API returned ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`Ollama API returned ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.message?.content || "";
+    } catch (e) {
+      console.log("Ollama failed, falling back to Gemini AI...");
+      const history = messages.map((m: any) => ({
+        role: m.role === "assistant" ? "model" : "user",
+        parts: [{ text: m.content || "" }]
+      }));
+      const chat = geminiModel.startChat({
+        history: [{ role: "user", parts: [{ text: "System instructions: " + systemPrompt }] }, { role: "model", parts: [{ text: "Acknowledged." }] }, ...history.slice(0, -1)]
+      });
+      const lastMessage = history.length > 0 ? history[history.length - 1].parts[0].text : "Hello";
+      const result = await chat.sendMessage(lastMessage);
+      return result.response.text();
     }
-
-    const data = await response.json();
-    return data.message?.content || "";
   }
 
   static async ollamaCallStream(
@@ -78,49 +95,69 @@ export class AiService {
     messages: any[],
     onToken: (token: string) => void
   ) {
-    const response = await fetch("http://127.0.0.1:11434/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "llama3.2",
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...messages
-        ],
-        stream: true
-      })
-    });
+    try {
+      const response = await fetch("http://127.0.0.1:11434/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "llama3.2",
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...messages
+          ],
+          stream: true
+        })
+      });
 
-    if (!response.ok) {
-      throw new Error(`Ollama API returned ${response.status}`);
-    }
+      if (!response.ok) {
+        throw new Error(`Ollama API returned ${response.status}`);
+      }
 
-    const reader = response.body?.getReader();
-    if (!reader) return "";
+      const reader = response.body?.getReader();
+      if (!reader) return "";
 
-    const decoder = new TextDecoder("utf-8");
-    let accumulated = "";
+      const decoder = new TextDecoder("utf-8");
+      let accumulated = "";
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-      const chunk = decoder.decode(value, { stream: true });
-      const lines = chunk.split("\n");
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n");
 
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        try {
-          const parsed = JSON.parse(line);
-          const content = parsed.message?.content || "";
-          accumulated += content;
-          onToken(content);
-        } catch (e) {
-          // ignore parsing error for incomplete chunks
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const parsed = JSON.parse(line);
+            const content = parsed.message?.content || "";
+            accumulated += content;
+            onToken(content);
+          } catch (e) {
+            // ignore parsing error for incomplete chunks
+          }
         }
       }
+      return accumulated;
+    } catch (e) {
+      console.log("Ollama failed, falling back to Gemini AI Stream...");
+      const history = messages.map((m: any) => ({
+        role: m.role === "assistant" ? "model" : "user",
+        parts: [{ text: m.content || "" }]
+      }));
+      const chat = geminiModel.startChat({
+        history: [{ role: "user", parts: [{ text: "System instructions: " + systemPrompt }] }, { role: "model", parts: [{ text: "Acknowledged." }] }, ...history.slice(0, -1)]
+      });
+      const lastMessage = history.length > 0 ? history[history.length - 1].parts[0].text : "Hello";
+      const result = await chat.sendMessageStream(lastMessage);
+      let accumulated = "";
+      for await (const chunk of result.stream) {
+        const chunkText = chunk.text();
+        accumulated += chunkText;
+        onToken(chunkText);
+      }
+      return accumulated;
     }
-    return accumulated;
   }
 
   static async getChatCompletionStream(
@@ -297,8 +334,17 @@ export class AiService {
       }
       return JSON.parse(content);
     } catch (error: any) {
-      console.error("Error generating course:", error);
-      throw new Error("Failed to generate course");
+      console.log("Ollama failed, using Gemini AI for course generation...");
+      try {
+        const result = await geminiModel.generateContent({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: "application/json" }
+        });
+        return JSON.parse(result.response.text());
+      } catch (geminiError: any) {
+        console.error("Gemini Error generating course:", geminiError);
+        throw new Error("Failed to generate course with AI.");
+      }
     }
   }
 
@@ -330,11 +376,20 @@ export class AiService {
       const data = await response.json();
       return JSON.parse(data.message?.content || "{}");
     } catch (error: any) {
-      console.error("Error evaluating quiz:", error);
-      return {
-        weaknesses: "Unable to analyze weaknesses at this time.",
-        aiPlan: "Review the course materials and try again!"
-      };
+      console.log("Ollama failed, using Gemini AI for evaluating quiz...");
+      try {
+        const result = await geminiModel.generateContent({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: "application/json" }
+        });
+        return JSON.parse(result.response.text());
+      } catch (geminiError: any) {
+        console.error("Error evaluating quiz with Gemini:", geminiError);
+        return {
+          weaknesses: "Unable to analyze weaknesses at this time.",
+          aiPlan: "Review the course materials and try again!"
+        };
+      }
     }
   }
 }
