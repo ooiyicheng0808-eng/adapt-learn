@@ -1,6 +1,9 @@
 import { PrismaClient } from "@prisma/client";
 import { sendQuizResultsEmail } from "../utils/email";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const prisma = new PrismaClient();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
