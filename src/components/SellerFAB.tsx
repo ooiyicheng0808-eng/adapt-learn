@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Plus, Bot, Upload, HelpCircle, X } from 'lucide-react';
 import { Button } from './ui/button';
-import { useNavigate } from 'react-router';
+import { useNavigate, useLocation } from 'react-router';
 import { toast } from 'sonner@2.0.3';
 import { UploadCourseModal } from './UploadCourseModal';
 import { CreateQuestionsModal } from './CreateQuestionsModal';
@@ -11,6 +11,12 @@ export function SellerFAB() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isQuestionsModalOpen, setIsQuestionsModalOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Only show on the main seller dashboard (courses page)
+  if (location.pathname !== '/seller') {
+    return null;
+  }
 
   const handleManualUpload = () => {
     setIsUploadModalOpen(true);
