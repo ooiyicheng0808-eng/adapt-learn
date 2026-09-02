@@ -177,7 +177,7 @@ export function Catalogue() {
             isOpen={isWithdrawModalOpen} 
             onClose={() => setIsWithdrawModalOpen(false)} 
           />
-          <SellerFAB />
+          {activeTab === 'products' && <SellerFAB />}
         </>
       )}
 
