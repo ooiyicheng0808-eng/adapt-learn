@@ -95,15 +95,15 @@ export function SellerCopilot() {
               </p>
             </div>
             
-            <div className="w-full max-w-xl flex gap-2 shadow-sm">
+            <div className="w-full max-w-xl flex flex-col sm:flex-row gap-2 shadow-sm">
               <Input 
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 placeholder="e.g. React Hooks, Advanced Finance, Fitness Diet..." 
-                className="h-14 text-lg bg-card"
+                className="h-14 text-lg bg-card w-full"
                 onKeyDown={(e) => e.key === 'Enter' && handleGenerate()}
               />
-              <Button onClick={handleGenerate} size="lg" className="h-14 px-8 text-lg font-semibold rounded-md">
+              <Button onClick={handleGenerate} size="lg" className="h-14 px-8 text-lg font-semibold rounded-md w-full sm:w-auto shrink-0">
                 Generate
                 <Send className="ml-2 h-5 w-5" />
               </Button>

@@ -327,25 +327,25 @@ export function AiLearning() {
 
   const renderPhase1 = () => (
     <div className="w-full max-w-2xl mx-auto space-y-6 animate-in slide-in-from-bottom-8 fade-in opacity-100 duration-500">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground pb-1">AI Adaptive Quiz</h2>
-          <div className="flex items-center gap-3">
-             <Badge variant={streak > 1 ? "default" : "secondary"} className="flex items-center gap-1 transition-all">
+          <div className="flex flex-wrap items-center gap-3">
+             <Badge variant={streak > 1 ? "default" : "secondary"} className="flex items-center gap-1 transition-all shrink-0">
                 <Zap className="h-3 w-3" />
                 Streak: {streak}
              </Badge>
-             <Badge variant="outline" className={`transition-colors duration-500 ${streak > 1 ? 'border-orange-500 text-orange-500 bg-orange-500/10' : ''}`}>
+             <Badge variant="outline" className={`transition-colors duration-500 shrink-0 ${streak > 1 ? 'border-orange-500 text-orange-500 bg-orange-500/10' : ''}`}>
                Difficulty: <span className="font-bold ml-1">{streak > 1 ? 'Hard' : currentQuestion.difficulty}</span>
              </Badge>
              {streak > 1 && (
-               <span className="text-xs text-orange-500 font-medium animate-pulse">
+               <span className="text-xs text-orange-500 font-medium animate-pulse shrink-0">
                   AI Difficulty Raised
                </span>
              )}
           </div>
         </div>
-        <div className="text-right">
+        <div className="sm:text-right w-full sm:w-auto">
           <p className="text-lg font-bold">{currentQuestionIdx + 1} <span className="text-muted-foreground text-sm">/ {quizQuestions.length}</span></p>
         </div>
       </div>

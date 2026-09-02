@@ -54,7 +54,7 @@ export function TopSearchBar({ filters, onFiltersChange, brandCounts }: TopSearc
           align="center"
           onOpenAutoFocus={(e) => e.preventDefault()} 
         >
-          <div className="flex flex-wrap gap-2">
+          <div className="flex overflow-x-auto whitespace-nowrap scrollbar-hide gap-2 pb-1">
             {brandCounts.map((bc) => {
               const isSelected = filters.selectedBrands.includes(bc.brand);
               return (
@@ -62,7 +62,7 @@ export function TopSearchBar({ filters, onFiltersChange, brandCounts }: TopSearc
                   key={bc.brand}
                   onClick={() => toggleBrand(bc.brand)}
                   className={cn(
-                    "px-4 py-2 text-sm font-bold rounded-md border-2 transition-all active:scale-95 whitespace-nowrap tracking-wide uppercase",
+                    "px-4 py-2 text-sm font-bold rounded-md border-2 transition-all active:scale-95 whitespace-nowrap tracking-wide uppercase shrink-0",
                     isSelected 
                       ? "border-primary bg-primary text-primary-foreground shadow-sm" 
                       : "border-border bg-card text-foreground hover:border-primary/50 hover:bg-accent"

@@ -63,15 +63,15 @@ export function Catalogue() {
   return (
     <div className="min-h-screen bg-background flex flex-col w-full">
       {/* Top Header */}
-      <header className="h-16 border-b flex items-center px-4 bg-card shrink-0 gap-4">
-        <div className="flex items-center gap-3">
+      <header className="h-16 border-b flex items-center px-4 bg-card shrink-0 gap-4 overflow-x-auto whitespace-nowrap scrollbar-hide">
+        <div className="flex items-center gap-3 shrink-0">
           <ProfileMenu />
           <h1 className="text-xl font-bold tracking-tight">EsEdu</h1>
         </div>
         
         {userProfile?.role !== 'seller' ? (
           <>
-            <div className="flex-1 max-w-2xl mx-auto flex justify-center">
+            <div className="flex-1 min-w-[200px] max-w-2xl mx-auto flex justify-center shrink-0">
               <TopSearchBar 
                 filters={filters} 
                 onFiltersChange={setFilters} 
@@ -79,7 +79,7 @@ export function Catalogue() {
               />
             </div>
             
-            <div className="ml-auto flex items-center">
+            <div className="ml-auto flex items-center shrink-0">
               <Button 
                 onClick={() => setIsRechargeModalOpen(true)}
                 className="rounded-full h-9 px-4 bg-primary hover:bg-primary/90 text-primary-foreground font-bold flex items-center gap-1.5 shadow-sm border-0"
@@ -91,7 +91,7 @@ export function Catalogue() {
             </div>
           </>
         ) : (
-          <div className="ml-auto flex items-center">
+          <div className="ml-auto flex items-center shrink-0">
             <Button 
               onClick={() => setIsWithdrawModalOpen(true)}
               className="bg-foreground text-background hover:bg-foreground/90 rounded-md font-medium px-6 h-9"
@@ -104,40 +104,40 @@ export function Catalogue() {
       
       {/* Seller Navigation */}
       {userProfile?.role === 'seller' && (
-        <div className="h-14 border-b flex items-center px-4 md:px-8 bg-card shrink-0 gap-6 md:gap-8 overflow-x-auto whitespace-nowrap scrollbar-hide">
+        <div className="h-14 border-b flex items-center px-4 md:px-8 bg-card shrink-0 gap-6 md:gap-8 overflow-x-auto whitespace-nowrap scrollbar-hide w-full">
           <button 
             onClick={() => setActiveTab('products')}
-            className={`text-base font-bold h-full px-2 transition-colors ${activeTab === 'products' ? 'text-foreground border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground hover:border-b-2 hover:border-muted-foreground/30 font-medium'}`}
+            className={`text-base font-bold h-full px-2 transition-colors shrink-0 ${activeTab === 'products' ? 'text-foreground border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground hover:border-b-2 hover:border-muted-foreground/30 font-medium'}`}
           >
             Courses
           </button>
           <button 
             onClick={() => setActiveTab('sales')}
-            className={`text-base font-bold h-full px-2 transition-colors ${activeTab === 'sales' ? 'text-foreground border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground hover:border-b-2 hover:border-muted-foreground/30 font-medium'}`}
+            className={`text-base font-bold h-full px-2 transition-colors shrink-0 ${activeTab === 'sales' ? 'text-foreground border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground hover:border-b-2 hover:border-muted-foreground/30 font-medium'}`}
           >
             Today's sales
           </button>
           <button 
             onClick={() => setActiveTab('progress')}
-            className={`text-base font-bold h-full px-2 transition-colors ${activeTab === 'progress' ? 'text-foreground border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground hover:border-b-2 hover:border-muted-foreground/30 font-medium'}`}
+            className={`text-base font-bold h-full px-2 transition-colors shrink-0 ${activeTab === 'progress' ? 'text-foreground border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground hover:border-b-2 hover:border-muted-foreground/30 font-medium'}`}
           >
             Learner Progress
           </button>
           <button 
             onClick={() => setActiveTab('growth')}
-            className={`text-base font-bold h-full px-2 transition-colors ${activeTab === 'growth' ? 'text-foreground border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground hover:border-b-2 hover:border-muted-foreground/30 font-medium'}`}
+            className={`text-base font-bold h-full px-2 transition-colors shrink-0 ${activeTab === 'growth' ? 'text-foreground border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground hover:border-b-2 hover:border-muted-foreground/30 font-medium'}`}
           >
             Growth
           </button>
           <button 
             onClick={() => setActiveTab('feedback')}
-            className={`text-base font-bold h-full px-2 transition-colors ${activeTab === 'feedback' ? 'text-foreground border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground hover:border-b-2 hover:border-muted-foreground/30 font-medium'}`}
+            className={`text-base font-bold h-full px-2 transition-colors shrink-0 ${activeTab === 'feedback' ? 'text-foreground border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground hover:border-b-2 hover:border-muted-foreground/30 font-medium'}`}
           >
             Learner Feedback
           </button>
           <button 
             onClick={() => setActiveTab('inbox')}
-            className={`text-base font-bold h-full px-2 transition-colors ${activeTab === 'inbox' ? 'text-foreground border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground hover:border-b-2 hover:border-muted-foreground/30 font-medium'}`}
+            className={`text-base font-bold h-full px-2 transition-colors shrink-0 ${activeTab === 'inbox' ? 'text-foreground border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground hover:border-b-2 hover:border-muted-foreground/30 font-medium'}`}
           >
             Inbox
           </button>
