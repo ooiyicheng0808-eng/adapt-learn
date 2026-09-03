@@ -1,7 +1,12 @@
 <div align="center">
   <h1>AdaptLearn Platform</h1>
   <p>
-    <strong>A platform for sharing skills and learning, powered by local AI (Ollama & Llama 3.2).</strong>
+    <strong>A multi-agent e-learning marketplace powered by Google Gemini 1.5 Flash & Local Ollama Llama 3.2.</strong>
+  </p>
+  <p>
+    🔑 <strong>Demo Accounts for Judges:</strong><br/>
+    • <strong>Learner Account:</strong> <code>learner@demo.com</code> | Password: <code>password123</code><br/>
+    • <strong>Seller Account:</strong> <code>seller@demo.com</code> | Password: <code>password123</code>
   </p>
 </div>
 
@@ -9,9 +14,9 @@
 
 ## Overview
 
-**AdaptLearn** is a learning marketplace for anyone who wants to learn new skills or sell their own courses—ranging from knowledge and money management to practical life skills and any topic summaries.
+**AdaptLearn** is a learning marketplace for anyone who wants to learn new skills or sell their own courses—ranging from financial literacy to practical tech skills.
 
-Instead of just using a basic AI chatbot, AdaptLearn uses **7 specialized AI helpers** running directly on your computer using Ollama and Llama 3.2. The system figures out what you need, sends your question to the right helper, remembers your progress over time, and keeps chat histories fast and clean.
+Instead of a basic single-prompt chatbot, AdaptLearn uses a **7-agent autonomous AI network** powered by **Google Gemini 1.5 Flash** (with local **Ollama / Llama 3.2** fallback). The system dynamically routes prompts, compresses chat history using **Context Retrieval (RAG)**, remembers student weaknesses across sessions, and generates structured course material on demand.
 
 ```mermaid
 graph TD
@@ -44,9 +49,13 @@ AdaptLearn uses a custom AI service (`AiService`) that picks the best agent for 
 
 ---
 
-## Key Features
+## 🧠 Memory & Retrieval Augmented Generation (RAG) Architecture
 
-### For Learners
+AdaptLearn implements a lightweight **RAG & Memory Retrieval pipeline**:
+
+1. **Context Window Summarization:** When chat history exceeds 8 turns, the system compresses past conversation tokens while injecting persistent student weakness logs from Prisma DB into the prompt context.
+2. **Dynamic Knowledge Injection:** The **Customer Support Agent** uses a RAG knowledge base containing exact platform exchange rates (0.077 - 0.12 MYR / Diamond), 14-day refund policies, and course catalog prices to guarantee 0% hallucination.
+3. **Persistent Student Weakness Retrieval:** When the **Study Planner Agent** is invoked, it queries historical `AgentMemory` records to generate custom 30-day study roadmaps targeted at student weak points.
 
 - **Smart Quizzes:** Automatically creates quizzes and highlights areas where you need more practice.
 - **Personalized Memory:** Remembers your learning history and weak spots so recommendations improve over time.
