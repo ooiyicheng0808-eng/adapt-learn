@@ -1,7 +1,7 @@
 <div align="center">
   <h1>AdaptLearn Platform</h1>
   <p>
-    <strong>A multi-agent e-learning marketplace powered by Google Gemini 1.5 Flash & Local Ollama Llama 3.2.</strong>
+    <strong>A multi-agent e-learning marketplace powered by a Hybrid AI Architecture (Ollama Llama 3.2 & Google Gemini API).</strong>
   </p>
   <p>
     🔑 <strong>Demo Accounts for Judges:</strong><br/>
@@ -16,7 +16,7 @@
 
 **AdaptLearn** is a learning marketplace for anyone who wants to learn new skills or sell their own courses—ranging from financial literacy to practical tech skills.
 
-Instead of a basic single-prompt chatbot, AdaptLearn uses a **7-agent autonomous AI network** powered by **Google Gemini 1.5 Flash** (with local **Ollama / Llama 3.2** fallback). The system dynamically routes prompts, compresses chat history using **Context Retrieval (RAG)**, remembers student weaknesses across sessions, and generates structured course material on demand.
+Instead of a basic single-prompt chatbot, AdaptLearn uses a **7-agent autonomous AI network**. It is built on a **Hybrid AI Infrastructure**: it natively runs **100% locally and privately using Ollama (Llama 3.2)** for offline data privacy, with automatic failover to **Google Gemini API** when deployed to cloud environments. The system dynamically routes prompts, compresses chat history using **Context Retrieval (RAG)**, remembers student weaknesses across sessions, and generates structured course material on demand.
 
 ```mermaid
 graph TD
