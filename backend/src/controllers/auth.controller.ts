@@ -7,11 +7,12 @@ export class AuthController {
       const result = await AuthService.register(req.body);
       res.status(201).json(result);
     } catch (error: any) {
+      console.error("CRITICAL REGISTER ERROR:", error);
       if (error.message === "Email already in use") {
         res.status(409).json({ message: error.message });
         return;
       }
-      res.status(500).json({ message: "Registration failed", error: error.message });
+      res.status(500).json({ message: error.message || "Registration failed", error: error.message });
     }
   }
 
