@@ -11,8 +11,8 @@
 
 To explore the live demo or test locally, use the pre-configured credentials below:
 
-- **Learner Account:** `learner@demo.com` | Password: `123456`
-- **Seller Account:** `seller@demo.com` | Password: `123456`
+- **Learner Account:** `L@demo.com` | Password: `Password123`
+- **Seller Account:** `CS@demo.com` | Password: `Password123`
 
 ---
 
