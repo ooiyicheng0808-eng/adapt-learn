@@ -3,12 +3,16 @@
   <p>
     <strong>A multi-agent e-learning marketplace powered by a Hybrid AI Architecture (Ollama Llama 3.2 & Google Gemini API).</strong>
   </p>
-  <p>
-    🔑 <strong>Demo Accounts for Judges:</strong><br/>
-    • <strong>Learner Account:</strong> <code>learner@demo.com</code> | Password: <code>123456</code><br/>
-    • <strong>Seller Account:</strong> <code>seller@demo.com</code> | Password: <code>123456</code>
-  </p>
 </div>
+
+---
+
+## 🔑 Quick Start & Demo Credentials
+
+To explore the live demo or test locally, use the pre-configured credentials below:
+
+- **Learner Account:** `learner@demo.com` | Password: `123456`
+- **Seller Account:** `seller@demo.com` | Password: `123456`
 
 ---
 
