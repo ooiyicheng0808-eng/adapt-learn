@@ -39,7 +39,7 @@ graph TD
 
 ---
 
-## 7 AI Helper Agents
+## 🤖 7 AI Helper Agents
 
 AdaptLearn uses a custom AI service (`AiService`) that picks the best agent for your prompt:
 
