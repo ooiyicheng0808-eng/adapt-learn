@@ -5,8 +5,8 @@
   </p>
   <p>
     🔑 <strong>Demo Accounts for Judges:</strong><br/>
-    • <strong>Learner Account:</strong> <code>learner@demo.com</code> | Password: <code>password123</code><br/>
-    • <strong>Seller Account:</strong> <code>seller@demo.com</code> | Password: <code>password123</code>
+    • <strong>Learner Account:</strong> <code>learner@demo.com</code> | Password: <code>123456</code><br/>
+    • <strong>Seller Account:</strong> <code>seller@demo.com</code> | Password: <code>123456</code>
   </p>
 </div>
 
